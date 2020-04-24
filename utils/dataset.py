@@ -20,7 +20,7 @@ def create_test_dataloader(data_path, batch_size=1, num_workers=2):
 def data_to_torch_dataset(data, target):
     data = torch.tensor(data, dtype=torch.float)
     target = torch.tensor(target, dtype=torch.float).view(-1, 1)
-    # target = torch.tensor(target, dtype=torch.long)
+    # target = torch.tensor(target, dtype=torch.long).view(-1, 1)
     return torch.utils.data.TensorDataset(data, target)
 
 def boston_dataset():
