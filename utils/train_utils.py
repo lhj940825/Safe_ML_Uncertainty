@@ -1,5 +1,6 @@
 import torch
 import os
+from torch.nn.utils import clip_grad_norm_
 
 def checkpoint_state(model=None, optimizer=None, epoch=None, it=None):
     optim_state = optimizer.state_dict() if optimizer is not None else None
@@ -33,14 +34,16 @@ def load_checkpoint(model=None, optimizer=None, filename='checkpoint', logger=No
     return it, epoch
 
 def lr_scheduler():
-    return 0.001
+    return 0.1
 
 class Trainer(object):
-    def __init__(self, model, model_fn, optimizer, ckpt_dir):
+    def __init__(self, model, model_fn, optimizer, ckpt_dir, grad_norm_clip=1.0, tb_logger=None):
         self.model = model
         self.model_fn = model_fn
         self.optimizer = optimizer
         self.ckpt_dir = ckpt_dir
+        self.grad_norm_clip = grad_norm_clip
+        self.tb_logger = tb_logger
 
         self._epoch = 0
         self._it = 0
@@ -51,8 +54,13 @@ class Trainer(object):
             #Train for one epoch
             for cur_it, batch in enumerate(train_loader):
                 loss = self._train_it(batch)
+
+                # Log to tensorboard
+                self.tb_logger.add_scalar('Loss/train_loss', loss, self._it)
                 running_loss += loss
                 self._it += 1
+
+            self.tb_logger.flush()
 
             #save trained model
             trained_epoch = self._epoch + 1
@@ -61,7 +69,7 @@ class Trainer(object):
             print("Epoch loss: ", running_loss / len(train_loader))
             if trained_epoch % ckpt_save_interval == 0:
                 print("Saving checkpoint")
-                ckpt_name = os.path.join(self.ckpt_dir, "ckpt_e%d" % trained_epoch)
+                ckpt_name = os.path.join(self.ckpt_dir, "ckpt_e{}".format(trained_epoch))
                 save_checkpoint(checkpoint_state(self.model, self.optimizer, trained_epoch, self._it), filename=ckpt_name)
 
     def _train_it(self, batch):
@@ -71,6 +79,7 @@ class Trainer(object):
         loss = self.model_fn(self.model, batch)
 
         loss.backward()
+        clip_grad_norm_(self.model.parameters(), self.grad_norm_clip)
         self.optimizer.step()
 
         return loss.item()
