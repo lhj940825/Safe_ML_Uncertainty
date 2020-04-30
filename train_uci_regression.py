@@ -24,16 +24,28 @@ if __name__ == "__main__":
     cfg["num_epochs"] = 40
     cfg["ckpt_save_interval"] = 5
     cfg["batch_size"] = 100
-    cfg["pdrop"] = 0.5
-    cfg["grad_norm_clip"] = 1.0
-    cfg["num_networks"] = 30
+    cfg["pdrop"] = 0.1
+    cfg["grad_norm_clip"] = None
+    cfg["num_networks"] = 50
 
-    data_dir = os.path.join("./", "data", "boston_housing")
+    # data_dir = os.path.join("./data", "boston_housing")
+    data_dir = os.path.join("./data", "wine")
 
     #Prepare data Boston Housing coverted to pytorch dataset
-    # dataset_bos, input_dim = u.dataset.boston_dataset()
-    bos_train = BostonDataset(os.path.join(data_dir, "boston_train.csv"))
-    train_loader_bos = torch.utils.data.DataLoader(bos_train, batch_size=cfg["batch_size"], num_workers=2)
+    # bos_train = BostonDataset(os.path.join(data_dir, "boston_train.csv"))
+    # train_loader_bos = torch.utils.data.DataLoader(bos_train, batch_size=cfg["batch_size"], num_workers=2)
+    # trans = transforms.Compose([transforms.ToTensor(),
+    #                             transforms.Normalize(mean=[0.0, 0.0, 0.0],
+    #                                                  std=[1.0, 1.0, 1.0])
+    # ])
+
+    trans = transforms.Compose([transforms.ToTensor(),
+                                transforms.Normalize(mean=[0.0],
+                                                     std=[1.0])
+                                ])
+
+    wine_train = WineDataset(os.path.join(data_dir, "train_winequality-red.csv"))
+    train_loader_wine = torch.utils.data.DataLoader(wine_train, batch_size=cfg["batch_size"], num_workers=2)
 
     # dataiter = iter(train_loader_bos)
     # data, target = dataiter.next()
@@ -41,7 +53,8 @@ if __name__ == "__main__":
     #Prepare model
     print("Prepare model")
     from model.fc import FC
-    model = FC(bos_train.input_dim, cfg["pdrop"])
+    # model = FC(bos_train.input_dim, cfg["pdrop"])
+    model = FC(wine_train.input_dim, cfg["pdrop"])
     model.cuda()
 
     #Prepare training
@@ -69,8 +82,14 @@ if __name__ == "__main__":
                       grad_norm_clip=cfg["grad_norm_clip"],
                       tb_logger=tb_logger)
 
+    # trainer.train(num_epochs=cfg["num_epochs"],
+    #               train_loader=train_loader_bos,
+    #               ckpt_save_interval=cfg["ckpt_save_interval"],
+    #               starting_iteration=starting_iteration,
+    #               starting_epoch=starting_epoch)
+    #
     trainer.train(num_epochs=cfg["num_epochs"],
-                  train_loader=train_loader_bos,
+                  train_loader=train_loader_wine,
                   ckpt_save_interval=cfg["ckpt_save_interval"],
                   starting_iteration=starting_iteration,
                   starting_epoch=starting_epoch)
@@ -78,8 +97,10 @@ if __name__ == "__main__":
     #Testing
     print("Start testing")
     # Currently the test dataset is the same as training set. TODO: K-Flod cross validation
-    bos_test = BostonDataset(os.path.join(data_dir, "boston_test.csv"))
-    test_loader = torch.utils.data.DataLoader(bos_test, batch_size=cfg["batch_size"], num_workers=2)
+    # bos_test = BostonDataset(os.path.join(data_dir, "boston_test.csv"))
+    # test_loader = torch.utils.data.DataLoader(bos_test, batch_size=cfg["batch_size"], num_workers=2)
+    wine_test = WineDataset(os.path.join(data_dir, "test_winequality-red.csv"), testing=True)
+    test_loader = torch.utils.data.DataLoader(wine_test, batch_size=cfg["batch_size"], num_workers=2)
 
     cur_ckpt = '{}.pth'.format(os.path.join(ckpt_dir, "ckpt_e{}".format(trainer._epoch + 1)))
     print("loading checkpoint ckpt_e{}".format(trainer._epoch + 1))

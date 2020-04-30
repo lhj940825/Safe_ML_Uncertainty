@@ -20,8 +20,9 @@ def model_fn(model, data):
 
 def eval(model, test_loader, cfg, tb_logger=None):
     NLL_list = None
+    RMSE_list = None
     with torch.no_grad():
-        loss_fn = torch.nn.MSELoss()
+
         for cur_it, batch in enumerate(test_loader):
             input, target = batch
             input = input.cuda(non_blocking=True)
@@ -38,30 +39,32 @@ def eval(model, test_loader, cfg, tb_logger=None):
             mean, var = compute_mean_and_variance(samples, num_networks=cfg["num_networks"])
 
             NLL = evaluate_with_NLL(mean, var, target.tolist())  # compute the Negative log likelihood with mean, var, target value(label)
+            RMSE = evaluate_with_RMSE(mean, target.tolist())
 
             #Log to tensorboard
             tb_logger.add_scalar('Loss/test_loss', np.average(NLL), cur_it)
 
             if NLL_list is None:
                 NLL_list = NLL
+                RMSE_list = RMSE
             else:
                 NLL_list = np.append(NLL_list, np.squeeze(NLL))
+                RMSE_list = np.append(RMSE_list, np.squeeze(RMSE))
 
             tb_logger.flush()
 
-    print("Min/Max sample error:")
-    print(min(NLL_list), max(NLL_list))
-    print()
-    print("Average NLL")
-    print(np.sum(NLL_list) / len(test_loader))
-    print()
+    print("NLL min/max: ", min(NLL_list), max(NLL_list))
+
+    print('NLL result mean:{}, standard deviation:{}'.format(np.mean(NLL_list), np.std(NLL_list)))
+    print('RMSE result mean:{}, standard deviation:{}'.format(np.mean(RMSE_list), np.std(RMSE_list)))
 
 def evaluate_with_NLL(mean, var, label):
-    import sys
-    epsilon = sys.float_info.epsilon
-    var = var + epsilon # Regularization
+    epsilon = 1e-6
 
-    NLL = np.log(var)/2 + np.square(label-mean)/(2*(var))
+    var[var==0] =epsilon # replace where the value is zero to small number(epsilon) to prevent the operation being devided by zero
+    var[var<epsilon] = epsilon
+    NLL = np.log(var)*0.5 + np.divide(np.square(label-mean),(2*(var)))
+
 
     return NLL
 
@@ -78,3 +81,7 @@ def compute_mean_and_variance(samples, num_networks):
     var =(np.sum(np.square(samples),axis=1))/num_networks - np.square(mean) # shape(var) = [Batch size, num_networks]
 
     return np.reshape(mean,(-1, 1)), np.reshape(var,(-1,1))
+
+def evaluate_with_RMSE(mean, label):
+
+    return np.sqrt(np.square(label - mean))

@@ -79,7 +79,8 @@ class Trainer(object):
         loss = self.model_fn(self.model, batch)
 
         loss.backward()
-        clip_grad_norm_(self.model.parameters(), self.grad_norm_clip)
+        if self.grad_norm_clip:
+            clip_grad_norm_(self.model.parameters(), self.grad_norm_clip)
         self.optimizer.step()
 
         return loss.item()
