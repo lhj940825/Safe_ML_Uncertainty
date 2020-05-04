@@ -13,6 +13,7 @@ class FC(nn.Module):
 
         # self.loss_fn = nn.NLLLoss()
         self.loss_fn = torch.nn.MSELoss()
+        # self.loss_fn = lambda pred, target: torch.mean(torch.pow((target - pred), 2)) #L2 loss
 
     def forward(self, x):
         out = self.fc1(x)

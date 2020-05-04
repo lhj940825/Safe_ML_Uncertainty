@@ -38,37 +38,23 @@ def boston_dataset():
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean=(0.0), std=(1.0))])
     return data_to_torch_dataset(data, target), feature_dim
 
-def split_dataset(data_dir, train_set_dir, test_set_dir):
-
-    if not os.path.exists(data_dir):
-        raise FileNotFoundError('{} file is not found. need to download and place the file in the mentioned directory'.format(wine_data_dir))
-
-    else: # when the dataset file 'winequality-white.csv' exists
-        if not os.path.exists(train_set_dir): # when the dataset file exists but not has been splitted.
-            wind_dataset = pd.read_csv(data_dir, sep=',')
-            X = wind_dataset.drop(labels= 'quality', axis = 1)
-
-            X = (X-X.min())/(X.max() - X.min()) # min-max normalization
-            Y = wind_dataset['quality']
-
-            train_x, test_x, train_y, test_y = train_test_split(X,Y, test_size=0.3, stratify=Y)
-
-
-            df_train = pd.concat([train_x, train_y], axis=1) # concatanate training set with corresponding labels
-            df_test = pd.concat([test_x, test_y], axis=1) # concatanate test set with corresponding labels
-
-            # write splitted dataset to csv
-            df_train.to_csv(train_set_dir, index=False)
-            df_test.to_csv(test_set_dir, index=False)
-
-class BostonDataset(Dataset):
-    def __init__(self, data_path, transform=None):
+class UCIDataset(Dataset):
+    def __init__(self, data_path, transform=None, testing=False):
         data = np.genfromtxt(data_path, delimiter=",") # load dataset
         scaler = StandardScaler()
         self.X = data[:, :-1]
+        self.Y = data[:, -1]
+        # #Keep the stat params for normalization.
+        # self.stat = np.asarray([[np.mean(self.X), np.mean(self.Y)], # code for normalization new normalization
+        #                         [np.std(self.X), np.std(self.Y)]])
+
         # self.X = (self.X - np.min(self.X)) / (np.max(self.X) - np.min(self.X))
         self.X = scaler.fit_transform(self.X)
-        self.Y = data[:, -1]
+
+        # code for normalization new normalization
+        # if not testing:
+        #     self.Y = scaler.fit_transform(self.Y.reshape(-1, 1))
+
         self.input_dim = len(self.X[0])
 
         self.transform = transform
@@ -86,7 +72,9 @@ class BostonDataset(Dataset):
         a = torch.tensor(x, dtype=torch.float)
         b = torch.tensor(y, dtype=torch.float).view(-1)
 
-        return torch.tensor(x, dtype=torch.float), torch.tensor(y, dtype=torch.float).view(-1) #return in form of tensor
+        return torch.tensor(x, dtype=torch.float), torch.tensor(y, dtype=torch.float).view(-1)# return in form of tensor
+        # return torch.tensor(x, dtype=torch.float), torch.tensor(y, dtype=torch.float).view(-1), self.stat # code for normalization new normalization
+
 
 class WineDataset(Dataset):
     def __init__(self, data_path, transform=None, testing=False):
@@ -116,21 +104,37 @@ class WineDataset(Dataset):
 
         return torch.tensor(x, dtype=torch.float), torch.tensor(y, dtype=torch.float).view(-1) #return in form of tensor
 
-
 if __name__ == "__main__":
-    # data_dir = os.path.join("./..", "data", "boston_housing")
-    # os.makedirs(data_dir, exist_ok=True)
-    # boston = datasets.load_boston()
-    # X = boston.data
-    # Y = boston.target
-    #
-    # X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=2020, shuffle=True)
-    # boston_train = np.append(X_train, Y_train.reshape(-1, 1), axis=1)
-    # boston_test = np.append(X_test, Y_test.reshape(-1, 1), axis=1)
-    #
-    # np.savetxt(os.path.join(data_dir, "boston_train.csv"), boston_train, delimiter=",")
-    # np.savetxt(os.path.join(data_dir, "boston_test.csv"), boston_test, delimiter=",")
-    data_dir = os.path.join("./..", "data", "wine")
-    wine_train = np.genfromtxt(os.path.join(data_dir, 'train_winequality-red.csv'), delimiter=',')[1:]
-    wine_test = np.genfromtxt(os.path.join(data_dir, 'test_winequality-red.csv'), delimiter=',')[1:]
+    data_dir = os.path.join("./..", "data", "concrete")
+    os.makedirs(data_dir, exist_ok=True)
+    dataset_concrete = np.genfromtxt(os.path.join(data_dir, 'concrete.csv'), delimiter=',')[1:]
+    X = dataset_concrete[:, :-1]
+    Y = dataset_concrete[:, -1]
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.1, random_state=2020, shuffle=True)
+    pp_train = np.append(X_train, Y_train.reshape(-1, 1), axis=1)
+    pp_test = np.append(X_test, Y_test.reshape(-1, 1), axis=1)
+
+    np.savetxt(os.path.join(data_dir, "concrete_train.csv"), pp_train, delimiter=",")
+    np.savetxt(os.path.join(data_dir, "concrete_test.csv"), pp_test, delimiter=",")
+
+    concrete_train = np.genfromtxt(os.path.join(data_dir, 'concrete_train.csv'), delimiter=',')
+    concrete_test = np.genfromtxt(os.path.join(data_dir, 'concrete_test.csv'), delimiter=',')
     print("finished")
+
+#     def __getitem__(self, item):
+#         x = np.asarray(self.X[item])
+#         y = np.asarray(self.Y[item])
+#
+#         if self.transform is not None:
+#             x = self.transform(x)
+#
+#         return torch.from_numpy(x), torch.from_numpy(y) #return in form of tensor
+#
+#
+# if __name__ == '__main__':
+#     #split_wine_dataset('./dataset/wine/winequality-white.csv')
+#     dataset = WineDataset('../dataset/wine/test_winequality-white.csv', None)
+#     data_loader = DataLoader(dataset,batch_size=1, shuffle=True, num_workers=0)
+#     print((next(iter(data_loader))))
+#     print(np.shape(next(iter(data_loader))[0]))
+# >>>>>>> lhj/wineDataset

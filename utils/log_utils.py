@@ -14,7 +14,7 @@ if __name__ == "__main__":
     cfg["grad_norm_clip"] = 5.0
     cfg["num_networks"] = 30
 
-    data_dir = os.path.join("./..", "data", "boston_housing")
+    data_dir = os.path.join("./..", "data", "boston")
 
     output_dir = os.path.join("./..", "output", "uci_regression")
     ckpt_dir = os.path.join(output_dir, 'ckpts')

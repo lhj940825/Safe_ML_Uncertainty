@@ -2,7 +2,7 @@
 *__pycache__*
 *_ext*
 *.bag
-*.csv
+
 *.cu.o
 *.DS_Store
 *.ipynb_checkpoints
@@ -11,7 +11,7 @@
 *.pth
 *.pyc
 *.tfevents*
-*.yml
+
 
 .idea/
 .vscode/
