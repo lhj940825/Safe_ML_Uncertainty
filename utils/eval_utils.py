@@ -198,11 +198,11 @@ def compute_test_loss(model: nn.Module, test_set_dir, batch_size, num_worker, de
 
 
 def evaluate_with_NLL(mean, var, label):
-    epsilon = 1e-3
-    var[var==0] =epsilon # replace where the value is zero to small number(epsilon) to prevent the operation being devided by zero
-    var[var<epsilon] = epsilon
+    #epsilon = 1e-3
+    #var[var==0] =epsilon # replace where the value is zero to small number(epsilon) to prevent the operation being devided by zero
+    #var[var<epsilon] = epsilon
     NLL = np.log(var)*0.5 + np.divide(np.square(label-mean),(2*(var)))
-
+    NLL[NLL<= -100] = -100
 
     return NLL
 

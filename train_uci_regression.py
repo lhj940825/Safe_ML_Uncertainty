@@ -15,7 +15,7 @@ if __name__ == "__main__":
     #Create directory for storing results
     output_dirs = {}
     output_dirs["boston"] = os.path.join("./", "output", "boston")
-    output_dirs["wine"] = os.path.join("./", "output", "wine")
+    #output_dirs["wine"] = os.path.join("./", "output", "wine")
     output_dirs["power_plant"] = os.path.join("./", "output", "power_plant")
     output_dirs["concrete"] = os.path.join("./", "output", "concrete")
 
@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     data_files = {}
     data_files["boston"] = ["boston_train.csv", "boston_test.csv"]
-    data_files["wine"] = ["train_winequality-red.csv", "test_winequality-red.csv"]
+    #data_files["wine"] = ["train_winequality-red.csv", "test_winequality-red.csv"]
     data_files["power_plant"] = ["pp_train.csv", "pp_test.csv"]
     data_files["concrete"] = ["concrete_train.csv", "concrete_test.csv"]
 
