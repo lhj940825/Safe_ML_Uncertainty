@@ -14,7 +14,7 @@ if __name__ == "__main__":
     #Create directory for storing results
     output_dirs = {}
     output_dirs["boston"] = os.path.join("./", "output", "boston")
-    output_dirs["wine"] = os.path.join("./", "output", "wine")
+    # output_dirs["wine"] = os.path.join("./", "output", "wine")
     output_dirs["power_plant"] = os.path.join("./", "output", "power_plant")
     output_dirs["concrete"] = os.path.join("./", "output", "concrete")
 
@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
     data_files = {}
     data_files["boston"] = ["boston_train.csv", "boston_test.csv"]
-    data_files["wine"] = ["train_winequality-red.csv", "test_winequality-red.csv"]
+    # data_files["wine"] = ["train_winequality-red.csv", "test_winequality-red.csv"]
     data_files["power_plant"] = ["pp_train.csv", "pp_test.csv"]
     data_files["concrete"] = ["concrete_train.csv", "concrete_test.csv"]
 
@@ -104,14 +104,14 @@ if __name__ == "__main__":
                               grad_norm_clip=cfg["grad_norm_clip"],
                               tb_logger=tb_loggers[key])
 
-        trainers[key].train(num_epochs=cfg["num_epochs"],
-                          train_loader=train_loaders[key],
-                          eval_loader=eval_loaders[key],
-                          ckpt_save_interval=cfg["ckpt_save_interval"],
-                          starting_iteration=starting_iteration,
-                          starting_epoch=starting_epoch)
-
-        draw_loss_trend_figure(key, trainers[key].train_loss, trainers[key].eval_loss, len(trainers[key].train_loss), output_dirs[key])
+        # trainers[key].train(num_epochs=cfg["num_epochs"],
+        #                   train_loader=train_loaders[key],
+        #                   eval_loader=eval_loaders[key],
+        #                   ckpt_save_interval=cfg["ckpt_save_interval"],
+        #                   starting_iteration=starting_iteration,
+        #                   starting_epoch=starting_epoch)
+        #
+        # draw_loss_trend_figure(key, trainers[key].train_loss, trainers[key].eval_loss, len(trainers[key].train_loss), output_dirs[key])
 
 
     #Testing
@@ -132,10 +132,31 @@ if __name__ == "__main__":
         models[key].load_state_dict(torch.load(cur_ckpts[key])["model_state"])
         models[key].train()
 
+    # Summarize the result into table and save it
+    results = {}
     for key, model in models.items():
         print("==================================Evaluating {}==========================================".format(key))
-        eval(model, test_loader=test_loaders[key], cfg=cfg, output_dir=output_dirs[key], tb_logger=tb_loggers[key], title=key)
+        result = eval(model, test_loader=test_loaders[key], cfg=cfg, output_dir=output_dirs[key], tb_logger=tb_loggers[key], title=key)
+        results[key] = result
         print("Finished\n")
+
+    dataset_list = []
+    NLL_list = []
+    RMSE_list = []
+    for key, val in results.items():
+        dataset_list.append(key)
+        NLL_list.append(val[0][0])
+        RMSE_list.append(val[0][1])
+
+    err_df = pd.DataFrame(index=range(len(dataset_list)), columns=["Datasets", "RMSE", "NLL"])
+    # a = pd.DataFrame(dataset_list)
+    err_df["Datasets"] = pd.DataFrame(dataset_list)
+    err_df["RMSE"] = pd.DataFrame(RMSE_list)
+    err_df["NLL"] = pd.DataFrame(NLL_list)
+
+    err_sum_dir = "./output/err_summary"
+    os.makedirs(err_sum_dir, exist_ok=True)
+    err_df.to_csv(os.path.join(err_sum_dir, "err_summary.csv"))
 
     #Finalizing
     print("Analysis finished\n")
