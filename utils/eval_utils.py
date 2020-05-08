@@ -106,9 +106,11 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
     print('RMSE result mean:{}, standard deviation:{}'.format(np.mean(RMSE_list), np.std(RMSE_list)))
 
     err_list = np.hstack([NLL_list.reshape(-1, 1), RMSE_list.reshape(-1, 1)])
-    err_list = np.append(err_list,
-                         np.asarray([[np.mean(NLL_list), np.mean(RMSE_list)],
-                                     [np.std(NLL_list), np.std(RMSE_list)]]), axis=0)
+
+    err_summary = np.asarray([[np.mean(NLL_list), np.mean(RMSE_list)],
+                              [np.std(NLL_list), np.std(RMSE_list)]])
+
+    err_list = np.append(err_list, err_summary, axis=0)
 
     np.savetxt(os.path.join(output_dir, title + "_error_list.csv"), err_list, delimiter=",")
 
@@ -121,7 +123,8 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
     plot_and_save_histograms(NLL_list, RMSE_list, output_dir, title=title)
     plot_scatter(NLL_list, RMSE_list, output_dir, title=title)
     plot_Mahalanobis_distance(sample_M_distance_list,gt_M_distance_list, output_dir=output_dir, title=title)
-    return
+
+    return err_summary
 
 def eval_batch(model, data):
     loss = model_fn(model, data)
@@ -198,11 +201,13 @@ def compute_test_loss(model: nn.Module, test_set_dir, batch_size, num_worker, de
 
 
 def evaluate_with_NLL(mean, var, label):
-    #epsilon = 1e-3
-    #var[var==0] =epsilon # replace where the value is zero to small number(epsilon) to prevent the operation being devided by zero
-    #var[var<epsilon] = epsilon
+
+    # epsilon = 1e-3
+    # var[var==0] =epsilon # replace where the value is zero to small number(epsilon) to prevent the operation being devided by zero
+    # var[var<epsilon] = epsilon
     NLL = np.log(var)*0.5 + np.divide(np.square(label-mean),(2*(var)))
-    NLL[NLL<= -100] = -100
+    NLL[NLL <= - 100] = -100
+    # NLL[NLL >= 100] = 100
 
     return NLL
 
