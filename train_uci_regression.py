@@ -3,7 +3,7 @@ import torchvision
 import os
 from torch import optim
 from utils.train_utils import Trainer, load_checkpoint
-from utils.eval_utils import model_fn, model_fn_eval, eval
+from utils.eval_utils import model_fn, model_fn_eval, eval, eval_with_training_dataset
 import utils.train_utils as tu
 from utils.dataset import *
 from utils.log_utils import create_tb_logger
@@ -138,8 +138,11 @@ if __name__ == "__main__":
     results = {}
     for key, model in models.items():
         print("==================================Evaluating {}==========================================".format(key))
-        result = eval(model, test_loader=test_loaders[key], cfg=cfg, output_dir=output_dirs[key], tb_logger=tb_loggers[key], title=key)
+        result = eval(model, test_loader=test_loaders[key], cfg=cfg, output_dir=output_dirs[key], tb_logger=tb_loggers[key], title='test-'+key)
         results[key] = result
+
+        #TODO below function is to generate figures for training dataset as requested by Joachim
+        eval_with_training_dataset(model, train_loaders[key], cfg=cfg, output_dir=output_dirs[key], tb_logger=tb_loggers[key], title='train-'+key)
         print("Finished\n")
 
     dataset_list = []

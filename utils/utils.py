@@ -106,8 +106,10 @@ def plot_and_save_histograms(NLL_list, RMSE_list, output_dir, title="fig"):
         color = plt.cm.viridis(norm(thisfrac))
         thispatch.set_facecolor(color)
 
+
     os.makedirs(output_dir, exist_ok=True)
     figure_dir = os.path.join(output_dir, 'figures')
+    figure_dir = get_train_or_test_figure_dir(figure_dir, title)
     os.makedirs(figure_dir, exist_ok=True)
 
     figure_dir = os.path.join(figure_dir, title + '_NLL_RMSE_histogram.png')
@@ -120,8 +122,10 @@ def plot_scatter(NLL_list, RMSE_list, output_dir, title="fig"):
     plt.xlabel('NLL value')
     plt.ylabel('RMSE value')
 
+
     os.makedirs(output_dir, exist_ok=True)
     figure_dir = os.path.join(output_dir, 'figures')
+    figure_dir = get_train_or_test_figure_dir(figure_dir, title)
     os.makedirs(figure_dir, exist_ok=True)
 
     figure_dir = os.path.join(figure_dir, title + '_NLL_RMSE_scatter.png')
@@ -145,8 +149,10 @@ def plot_Mahalanobis_distance(sample_M_distance_list, gt_M_distance_list, output
     plt.ylabel('rel frequency(log scale)')
     plt.title(title + ': Assessment of uncertainty realism')
 
+
     os.makedirs(output_dir, exist_ok=True)
     figure_dir = os.path.join(output_dir, 'figures')
+    figure_dir = get_train_or_test_figure_dir(figure_dir, title)
     os.makedirs(figure_dir, exist_ok=True)
     figure_dir = os.path.join(figure_dir, title + '_Assesment of Uncertainty Realism.png')
     plt.savefig(figure_dir)
@@ -176,11 +182,26 @@ def plot_Mahalanobis_distance_with_Chi2_PDF(sample_M_distance_list, output_dir, 
 
     os.makedirs(output_dir, exist_ok=True)
     figure_dir = os.path.join(output_dir, 'figures')
+    figure_dir = get_train_or_test_figure_dir(figure_dir, title)
     os.makedirs(figure_dir, exist_ok=True)
-    figure_dir = os.path.join(figure_dir, title + 'Assesment of Uncertainty Realism with Chi PDF.png')
+    figure_dir = os.path.join(figure_dir, title + '_Assesment of Uncertainty Realism with Chi PDF.png')
     plt.savefig(figure_dir)
 
     plt.show()
+
+def get_train_or_test_figure_dir(output_dir, title):
+    if 'train' in title: # when the figures are from training dataset
+        figure_dir = os.path.join(output_dir, 'train')
+
+    elif 'test': # from test dataset
+        figure_dir = os.path.join(output_dir, 'test')
+
+    else:
+        raise NameError('please make sure the name of your variable title starts with train or test')
+
+    os.makedirs(figure_dir, exist_ok=True)
+    return figure_dir
+
 
 
 """
