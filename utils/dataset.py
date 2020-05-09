@@ -105,21 +105,38 @@ class WineDataset(Dataset):
 
         return torch.tensor(x, dtype=torch.float), torch.tensor(y, dtype=torch.float).view(-1) #return in form of tensor
 
+def dataset_split(dataset, fname, tar_split=-1, split_ratio=0.1):
+    X = dataset[:, :tar_split]
+    Y = dataset[:, tar_split:]
+
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=split_ratio, random_state=2020, shuffle=True)
+    train = np.hstack([X_train, Y_train.reshape(len(X_train), -1)])
+    test = np.hstack([X_test, Y_test.reshape(len(X_test), -1)])
+
+    np.savetxt(fname + "_train.csv", train, delimiter=",")
+    np.savetxt(fname + "_test.csv", test, delimiter=",")
+
+    # train = np.genfromtxt(fname + "_train.csv", delimiter=',')
+    # test = np.genfromtxt(fname + "_train.csv", delimiter=',')
+
 if __name__ == "__main__":
-    data_dir = os.path.join("./..", "data", "concrete")
-    os.makedirs(data_dir, exist_ok=True)
-    dataset_concrete = np.genfromtxt(os.path.join(data_dir, 'concrete.csv'), delimiter=',')[1:]
-    X = dataset_concrete[:, :-1]
-    Y = dataset_concrete[:, -1]
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.1, random_state=2020, shuffle=True)
-    pp_train = np.append(X_train, Y_train.reshape(-1, 1), axis=1)
-    pp_test = np.append(X_test, Y_test.reshape(-1, 1), axis=1)
+    data_dirs = {}
+    target_splits = {}
+    data_dirs["energy"] = os.path.join("./..", "data", "energy")
+    target_splits["energy"] = -2
+    data_dirs["kin8nm"] = os.path.join("./..", "data", "kin8nm")
+    target_splits["kin8nm"] = -1
+    # data_dirs["naval"] = os.path.join("./..", "data", "naval")
+    # data_dirs["yacht"] = os.path.join("./..", "data", "yacht")
 
-    np.savetxt(os.path.join(data_dir, "concrete_train.csv"), pp_train, delimiter=",")
-    np.savetxt(os.path.join(data_dir, "concrete_test.csv"), pp_test, delimiter=",")
+    data_files = {}
+    datasets = {}
+    for key, data_dir in data_dirs.items():
+        os.makedirs(data_dir, exist_ok=True)
+        data_files[key] = os.path.join(data_dir, key + ".csv")
+        datasets[key] = np.genfromtxt(data_files[key], delimiter=',')
+        dataset_split(datasets[key], os.path.join(data_dir, key), tar_split=target_splits[key])
 
-    concrete_train = np.genfromtxt(os.path.join(data_dir, 'concrete_train.csv'), delimiter=',')
-    concrete_test = np.genfromtxt(os.path.join(data_dir, 'concrete_test.csv'), delimiter=',')
     print("finished")
 
 #     def __getitem__(self, item):

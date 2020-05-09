@@ -3,6 +3,7 @@ import torch.nn as nn
 import sklearn.datasets as datasets
 import pandas as pd
 import os
+import numpy as np
 
 # m = nn.LogSoftmax(dim=0)
 # n = nn.LogSoftmax(dim=1)
@@ -30,12 +31,20 @@ import os
 # print(output33)
 # print(output44)
 
-bos = datasets.load_boston()
-data = bos.data
-target = bos.target
+data_dirs = {}
+target_splits = {}
+# data_dirs["energy"] = os.path.join("./..", "data", "energy")
+# target_splits["energy"] = -2
+# data_dirs["kin8nm"] = os.path.join("./..", "data", "kin8nm")
+# target_splits["kin8nm"] = -1
+data_dirs["naval"] = os.path.join(".", "data", "naval")
+data_dirs["yacht"] = os.path.join(".", "data", "yacht")
 
-a = torch.utils.data.TensorDataset(data, target)
-b = a.tensors
+data_files = {}
+datasets = {}
+for key, data_dir in data_dirs.items():
+    os.makedirs(data_dir, exist_ok=True)
+    data_files[key] = os.path.join(data_dir, key + ".csv")
+    datasets[key] = np.genfromtxt(data_files[key], delimiter=',')
 
-print(data)
-print(target)
+print()
