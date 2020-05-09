@@ -206,30 +206,6 @@ def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=N
     plot_Mahalanobis_distance_with_Chi2_PDF(sample_M_distance_list,output_dir=output_dir,title=title)
     return err_summary
 
-# def compute_mean_and_variance(samples, num_networks):
-#     """
-#     Compute the approximation of mean and variance for given input by MC dropout
-#
-#     :param samples: for each input in batch, we draw (num_networks) samples from model [Batch_size, num_networks]
-#     :param num_networks: Dropout approximate the ensemble. num_networks means the number of times we draw samples from our dropout model.
-#     :return: approximated mean and variance
-#     """
-#
-#     mean = np.mean(samples, axis=1) #shape(mean) = [batch_size, num_networks]
-#
-#     mean = np.reshape(mean, (-1,1))
-#     #var =(np.sum(np.square(samples),axis=1))/num_networks - np.square(mean) # shape(var) = [Batch size, num_networks]
-#     var = (np.sum(np.square(np.subtract(samples, mean)), axis=1))/num_networks
-#
-#     # check the values
-#     #print('mean shape', np.shape(mean), mean)
-#     #print('samples', samples[0:2])
-#     #print('means', np.mean(var))
-#     #print('std', np.std(var))
-#
-#     return np.reshape(mean,(-1, 1)), np.reshape(var,(-1,1))
-
-
 def compute_test_loss(model: nn.Module, test_set_dir, batch_size, num_worker, device):
     """
     A function to compute the loss of model in training phase given the test dataset.
