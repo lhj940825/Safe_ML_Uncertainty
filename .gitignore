@@ -19,7 +19,7 @@
 build/
 ckpt/
 ckpts/
-data/
+
 dist/
 output/
 results/

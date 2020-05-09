@@ -3,18 +3,20 @@ import torchvision
 import os
 from torch import optim
 from utils.train_utils import Trainer, load_checkpoint
-from utils.eval_utils import model_fn, model_fn_eval, eval
+from utils.eval_utils import model_fn, model_fn_eval, eval, eval_with_training_dataset
 import utils.train_utils as tu
 from utils.dataset import *
 from utils.log_utils import create_tb_logger
 from utils.utils import *
+
 
 if __name__ == "__main__":
     #TODO: Simplifiy and automate the process
     #Create directory for storing results
     output_dirs = {}
     output_dirs["boston"] = os.path.join("./", "output", "boston")
-    # output_dirs["wine"] = os.path.join("./", "output", "wine")
+
+    #output_dirs["wine"] = os.path.join("./", "output", "wine")
     output_dirs["power_plant"] = os.path.join("./", "output", "power_plant")
     output_dirs["concrete"] = os.path.join("./", "output", "concrete")
 
@@ -41,7 +43,7 @@ if __name__ == "__main__":
 
     data_files = {}
     data_files["boston"] = ["boston_train.csv", "boston_test.csv"]
-    # data_files["wine"] = ["train_winequality-red.csv", "test_winequality-red.csv"]
+    #data_files["wine"] = ["train_winequality-red.csv", "test_winequality-red.csv"]
     data_files["power_plant"] = ["pp_train.csv", "pp_test.csv"]
     data_files["concrete"] = ["concrete_train.csv", "concrete_test.csv"]
 
@@ -52,9 +54,9 @@ if __name__ == "__main__":
 
     for key, fname in data_files.items():
         train_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[0]))
-        train_loaders[key] = torch.utils.data.DataLoader(train_datasets[key], batch_size=cfg["batch_size"], num_workers=2)
+        train_loaders[key] = torch.utils.data.DataLoader(train_datasets[key], batch_size=cfg["batch_size"], num_workers=0)
         eval_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[1]), testing=True)
-        eval_loaders[key] = torch.utils.data.DataLoader(eval_datasets[key], batch_size=cfg["batch_size"], num_workers=2)
+        eval_loaders[key] = torch.utils.data.DataLoader(eval_datasets[key], batch_size=cfg["batch_size"], num_workers=0)
 
     # dataiter = iter(train_loader_bos)
     # data, target = dataiter.next()
@@ -104,13 +106,13 @@ if __name__ == "__main__":
                               grad_norm_clip=cfg["grad_norm_clip"],
                               tb_logger=tb_loggers[key])
 
-        # trainers[key].train(num_epochs=cfg["num_epochs"],
-        #                   train_loader=train_loaders[key],
-        #                   eval_loader=eval_loaders[key],
-        #                   ckpt_save_interval=cfg["ckpt_save_interval"],
-        #                   starting_iteration=starting_iteration,
-        #                   starting_epoch=starting_epoch)
-        #
+        #trainers[key].train(num_epochs=cfg["num_epochs"],
+        #                  train_loader=train_loaders[key],
+        #                  eval_loader=eval_loaders[key],
+        #                  ckpt_save_interval=cfg["ckpt_save_interval"],
+        #                  starting_iteration=starting_iteration,
+        #                  starting_epoch=starting_epoch)
+
         # draw_loss_trend_figure(key, trainers[key].train_loss, trainers[key].eval_loss, len(trainers[key].train_loss), output_dirs[key])
 
 
@@ -121,7 +123,7 @@ if __name__ == "__main__":
     test_loaders = {}
     for key, fname in data_files.items():
         test_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[1]), testing=True)
-        test_loaders[key] = torch.utils.data.DataLoader(test_datasets[key], batch_size=cfg["batch_size"], num_workers=2)
+        test_loaders[key] = torch.utils.data.DataLoader(test_datasets[key], batch_size=cfg["batch_size"], num_workers=0)
 
     cur_ckpts = {}
     for key, ckpt_dir in ckpt_dirs.items():
@@ -136,8 +138,11 @@ if __name__ == "__main__":
     results = {}
     for key, model in models.items():
         print("==================================Evaluating {}==========================================".format(key))
-        result = eval(model, test_loader=test_loaders[key], cfg=cfg, output_dir=output_dirs[key], tb_logger=tb_loggers[key], title=key)
+        result = eval(model, test_loader=test_loaders[key], cfg=cfg, output_dir=output_dirs[key], tb_logger=tb_loggers[key], title='test-'+key)
         results[key] = result
+
+        #TODO below function is to generate figures for training dataset as requested by Joachim
+        eval_with_training_dataset(model, train_loaders[key], cfg=cfg, output_dir=output_dirs[key], tb_logger=tb_loggers[key], title='train-'+key)
         print("Finished\n")
 
     dataset_list = []
