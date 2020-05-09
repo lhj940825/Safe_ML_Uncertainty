@@ -142,7 +142,7 @@ def plot_Mahalanobis_distance(sample_M_distance_list, gt_M_distance_list, output
 
     plt.legend(loc='upper right')
     plt.xlabel('Squared Mahalanobis_distance')
-    plt.ylabel('frequency')
+    plt.ylabel('rel frequency(log scale)')
     plt.title(title + ': Assessment of uncertainty realism')
 
     os.makedirs(output_dir, exist_ok=True)
@@ -159,14 +159,14 @@ def plot_Mahalanobis_distance_with_Chi2_PDF(sample_M_distance_list, output_dir, 
     x = np.linspace(chi2.ppf(0.01, df=1),chi2.ppf(0.999999, df=1), 1000)
     plt.plot(x, chi2.pdf(x, df=1),'b-', lw=5, alpha=0.6, label='chi2 pdf')
 
-    num_bins = 100
+    num_bins = 200
 
     plt.hist(sample_M_distance_list, bins=num_bins, color='sandybrown',  alpha=0.5, label='Sample', density=True)
     #plt.hist(chi, bins=bins,  alpha=0.5, label='Chi PDF', density=True)
 
     plt.legend(loc='upper right')
     plt.xlabel('Squared Mahalanobis_distance')
-    plt.ylabel('frequency')
+    plt.ylabel('rel frequency(log scale)')
     plt.xlim(0, max(sample_M_distance_list))
     plt.title(title + ': Assessment of uncertainty realism with Chi PDF')
 
@@ -177,7 +177,7 @@ def plot_Mahalanobis_distance_with_Chi2_PDF(sample_M_distance_list, output_dir, 
     os.makedirs(output_dir, exist_ok=True)
     figure_dir = os.path.join(output_dir, 'figures')
     os.makedirs(figure_dir, exist_ok=True)
-    figure_dir = os.path.join(figure_dir, title + '_Assesment of Uncertainty Realism with Chi PDF.png')
+    figure_dir = os.path.join(figure_dir, title + 'Assesment of Uncertainty Realism with Chi PDF.png')
     plt.savefig(figure_dir)
 
     plt.show()
