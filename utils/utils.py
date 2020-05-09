@@ -129,9 +129,63 @@ def plot_scatter(NLL_list, RMSE_list, output_dir, title="fig"):
     plt.show()
 
 
-### TODO add code below when merge conflict happens
 
 def plot_Mahalanobis_distance(sample_M_distance_list, gt_M_distance_list, output_dir, title="fig"):
+    num_bins = 100
+    bins=np.histogram(np.hstack((sample_M_distance_list,gt_M_distance_list)), bins=num_bins)[1] # to get the equal bin width
+
+    plt.hist(gt_M_distance_list, bins,   alpha=0.5, label='Ground Truth',  weights=np.ones(len(gt_M_distance_list)) / len(gt_M_distance_list))
+    plt.hist(sample_M_distance_list, bins,  alpha=0.5, label='Sample', weights=np.ones(len(sample_M_distance_list)) / len(sample_M_distance_list))
+
+    # Logarithmic y-axis bins
+    plt.yscale('log', nonposy='clip')
+
+    plt.legend(loc='upper right')
+    plt.xlabel('Squared Mahalanobis_distance')
+    plt.ylabel('frequency')
+    plt.title(title + ': Assessment of uncertainty realism')
+
+    os.makedirs(output_dir, exist_ok=True)
+    figure_dir = os.path.join(output_dir, 'figures')
+    os.makedirs(figure_dir, exist_ok=True)
+    figure_dir = os.path.join(figure_dir, title + '_Assesment of Uncertainty Realism.png')
+    plt.savefig(figure_dir)
+
+    plt.show()
+
+def plot_Mahalanobis_distance_with_Chi2_PDF(sample_M_distance_list, output_dir, title="fig"):
+    from scipy.stats import chi2
+
+    x = np.linspace(chi2.ppf(0.01, df=1),chi2.ppf(0.999999, df=1), 1000)
+    plt.plot(x, chi2.pdf(x, df=1),'b-', lw=5, alpha=0.6, label='chi2 pdf')
+
+    num_bins = 100
+
+    plt.hist(sample_M_distance_list, bins=num_bins, color='sandybrown',  alpha=0.5, label='Sample', density=True)
+    #plt.hist(chi, bins=bins,  alpha=0.5, label='Chi PDF', density=True)
+
+    plt.legend(loc='upper right')
+    plt.xlabel('Squared Mahalanobis_distance')
+    plt.ylabel('frequency')
+    plt.xlim(0, max(sample_M_distance_list))
+    plt.title(title + ': Assessment of uncertainty realism with Chi PDF')
+
+    # Logarithmic y-axis bins
+    plt.yscale('log', nonposy='clip')
+
+
+    os.makedirs(output_dir, exist_ok=True)
+    figure_dir = os.path.join(output_dir, 'figures')
+    os.makedirs(figure_dir, exist_ok=True)
+    figure_dir = os.path.join(figure_dir, title + '_Assesment of Uncertainty Realism with Chi PDF.png')
+    plt.savefig(figure_dir)
+
+    plt.show()
+
+
+"""
+def plot_Mahalanobis_distance(sample_M_distance_list, gt_M_distance_list, output_dir, title="fig"):
+    
     num_bins = 100
 
     bins=np.histogram(np.hstack((sample_M_distance_list,gt_M_distance_list)), bins=num_bins)[1] # to get the equal bin width
@@ -141,7 +195,7 @@ def plot_Mahalanobis_distance(sample_M_distance_list, gt_M_distance_list, output
 
 
     plt.legend(loc='upper right')
-    plt.xlabel('Mahalanobis_distance')
+    plt.xlabel('Squared Mahalanobis_distance')
     plt.ylabel('frequency')
     plt.gca().yaxis.set_major_formatter(PercentFormatter(1))
     plt.title(title + ': Assessment of uncertainty realism')
@@ -153,5 +207,4 @@ def plot_Mahalanobis_distance(sample_M_distance_list, gt_M_distance_list, output
     plt.savefig(figure_dir)
 
     plt.show()
-
-####################################################################################
+"""

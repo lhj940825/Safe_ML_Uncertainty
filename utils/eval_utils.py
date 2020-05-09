@@ -123,7 +123,7 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
     plot_and_save_histograms(NLL_list, RMSE_list, output_dir, title=title)
     plot_scatter(NLL_list, RMSE_list, output_dir, title=title)
     plot_Mahalanobis_distance(sample_M_distance_list,gt_M_distance_list, output_dir=output_dir, title=title)
-
+    plot_Mahalanobis_distance_with_Chi2_PDF(sample_M_distance_list,output_dir=output_dir,title=title)
     return err_summary
 
 def eval_batch(model, data):

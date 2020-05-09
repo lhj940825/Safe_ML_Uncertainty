@@ -16,7 +16,7 @@ if __name__ == "__main__":
     output_dirs = {}
     output_dirs["boston"] = os.path.join("./", "output", "boston")
 
-    # output_dirs["wine"] = os.path.join("./", "output", "wine")
+    #output_dirs["wine"] = os.path.join("./", "output", "wine")
     output_dirs["power_plant"] = os.path.join("./", "output", "power_plant")
     output_dirs["concrete"] = os.path.join("./", "output", "concrete")
 
@@ -43,9 +43,7 @@ if __name__ == "__main__":
 
     data_files = {}
     data_files["boston"] = ["boston_train.csv", "boston_test.csv"]
-
-    # data_files["wine"] = ["train_winequality-red.csv", "test_winequality-red.csv"]
-
+    #data_files["wine"] = ["train_winequality-red.csv", "test_winequality-red.csv"]
     data_files["power_plant"] = ["pp_train.csv", "pp_test.csv"]
     data_files["concrete"] = ["concrete_train.csv", "concrete_test.csv"]
 
@@ -56,9 +54,9 @@ if __name__ == "__main__":
 
     for key, fname in data_files.items():
         train_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[0]))
-        train_loaders[key] = torch.utils.data.DataLoader(train_datasets[key], batch_size=cfg["batch_size"], num_workers=2)
+        train_loaders[key] = torch.utils.data.DataLoader(train_datasets[key], batch_size=cfg["batch_size"], num_workers=0)
         eval_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[1]), testing=True)
-        eval_loaders[key] = torch.utils.data.DataLoader(eval_datasets[key], batch_size=cfg["batch_size"], num_workers=2)
+        eval_loaders[key] = torch.utils.data.DataLoader(eval_datasets[key], batch_size=cfg["batch_size"], num_workers=0)
 
     # dataiter = iter(train_loader_bos)
     # data, target = dataiter.next()
@@ -108,13 +106,13 @@ if __name__ == "__main__":
                               grad_norm_clip=cfg["grad_norm_clip"],
                               tb_logger=tb_loggers[key])
 
-        # trainers[key].train(num_epochs=cfg["num_epochs"],
-        #                   train_loader=train_loaders[key],
-        #                   eval_loader=eval_loaders[key],
-        #                   ckpt_save_interval=cfg["ckpt_save_interval"],
-        #                   starting_iteration=starting_iteration,
-        #                   starting_epoch=starting_epoch)
-        #
+        #trainers[key].train(num_epochs=cfg["num_epochs"],
+        #                  train_loader=train_loaders[key],
+        #                  eval_loader=eval_loaders[key],
+        #                  ckpt_save_interval=cfg["ckpt_save_interval"],
+        #                  starting_iteration=starting_iteration,
+        #                  starting_epoch=starting_epoch)
+
         # draw_loss_trend_figure(key, trainers[key].train_loss, trainers[key].eval_loss, len(trainers[key].train_loss), output_dirs[key])
 
 
@@ -125,7 +123,7 @@ if __name__ == "__main__":
     test_loaders = {}
     for key, fname in data_files.items():
         test_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[1]), testing=True)
-        test_loaders[key] = torch.utils.data.DataLoader(test_datasets[key], batch_size=cfg["batch_size"], num_workers=2)
+        test_loaders[key] = torch.utils.data.DataLoader(test_datasets[key], batch_size=cfg["batch_size"], num_workers=0)
 
     cur_ckpts = {}
     for key, ckpt_dir in ckpt_dirs.items():

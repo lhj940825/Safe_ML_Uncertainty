@@ -54,7 +54,8 @@ class UCIDataset(Dataset):
         # code for normalization new normalization
         # if not testing:
         #     self.Y = scaler.fit_transform(self.Y.reshape(-1, 1))
-        self.Y = scaler.fit_transform(self.Y.reshape(-1, 1))
+
+        #self.Y = scaler.fit_transform(self.Y.reshape(-1, 1))
 
         self.input_dim = len(self.X[0])
 
