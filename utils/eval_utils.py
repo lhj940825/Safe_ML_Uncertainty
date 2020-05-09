@@ -14,8 +14,11 @@ from model import Wine_FC
 def model_fn(model, data):
     rtn_dict = {}
     #unpack data
-    input, target = data
-    # input, target, _ = data # code for normalization new normalization
+    # input, target = data
+    # a = torch.mean(input, dim=0)
+    # b = torch.std(input, dim=0)
+    # c = torch.std(input[:, 0])
+    input, target, _ = data # code for normalization new normalization
     #Move data to GPU
     input = input.cuda(non_blocking=True)
     target = target.cuda(non_blocking=True)
@@ -32,17 +35,15 @@ def model_fn_eval(model, eval_loader):
 
         # loss = model_fn(model, batch)
 
-        input, target = batch
-        # input, target, stat = batch # code for normalization new normalization
+        # input, target = batch
+        input, target, stat = batch # code for normalization new normalization
         input = input.cuda(non_blocking=True)
         target = target.cuda(non_blocking=True)
         # stat = stat.cuda(non_blocking=True)[0] # code for normalization new normalization
         pred = model(input)
 
-        #[[X_mean, Y_mean],
-        # [X_sigma, Y_sigma]]
-        # pred = stat[1, 1] * pred + stat[0, 1] # code for normalization new normalization
-        # target = stat[1, 1] * target + stat[0, 1]
+        #stat = [Y_mean, Y_std]
+        # pred = stat[1] * pred + stat[0] # code for normalization new normalization
 
         loss = model.loss_fn(pred, target)
 
@@ -59,8 +60,8 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
     with torch.no_grad():
 
         for cur_it, batch in enumerate(test_loader):
-            input, target = batch
-            # input, target, stat = batch # code for normalization new normalization
+            # input, target = batch
+            input, target, stat = batch # code for normalization new normalization
             input = input.cuda(non_blocking=True)
             target = target.cuda(non_blocking=True)
             # stat = stat.cuda(non_blocking=True)[0] # code for normalization new normalization
@@ -69,16 +70,17 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
             for i in range(cfg["num_networks"]):  # By MC dropout, samples the network output several times(=num_networks) given the same input in order to compute the mean and variance for such given input
                 if samples is None:
                     samples = model(input).tolist()
-                    # out = stat[1, 1] * model(input) + stat[0, 1] # code for normalization new normalization
+                    # out = stat[1] * model(input) + stat[0] # code for normalization new normalization
                     # samples = out.tolist()
                 else:
                     model_output = model(input).tolist()
                     samples = np.append(samples, np.asarray(model_output), axis=1)
-                    # out = stat[1, 1] * model(input) + stat[0, 1] # code for normalization new normalization
+                    # out = stat[1] * model(input) + stat[0] # code for normalization new normalization
                     # out = out.tolist()
                     # samples = np.append(samples, np.asarray(out), axis=1)
 
             mean, var = compute_mean_and_variance(samples, num_networks=cfg["num_networks"])
+            # mean = stat[1] * mean + stat[0]
 
             NLL = evaluate_with_NLL(mean, var, target.tolist())  # compute the Negative log likelihood with mean, var, target value(label)
             RMSE = evaluate_with_RMSE(mean, target.tolist())
@@ -140,8 +142,8 @@ def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=N
     with torch.no_grad():
 
         for cur_it, batch in enumerate(train_loader):
-            input, target = batch
-            # input, target, stat = batch # code for normalization new normalization
+            # input, target = batch
+            input, target, stat = batch # code for normalization new normalization
             input = input.cuda(non_blocking=True)
             target = target.cuda(non_blocking=True)
             # stat = stat.cuda(non_blocking=True)[0] # code for normalization new normalization
@@ -150,16 +152,17 @@ def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=N
             for i in range(cfg["num_networks"]):  # By MC dropout, samples the network output several times(=num_networks) given the same input in order to compute the mean and variance for such given input
                 if samples is None:
                     samples = model(input).tolist()
-                    # out = stat[1, 1] * model(input) + stat[0, 1] # code for normalization new normalization
+                    # out = stat[1] * model(input) + stat[0] # code for normalization new normalization
                     # samples = out.tolist()
                 else:
                     model_output = model(input).tolist()
                     samples = np.append(samples, np.asarray(model_output), axis=1)
-                    # out = stat[1, 1] * model(input) + stat[0, 1] # code for normalization new normalization
+                    # out = stat[1] * model(input) + stat[0] # code for normalization new normalization
                     # out = out.tolist()
                     # samples = np.append(samples, np.asarray(out), axis=1)
 
             mean, var = compute_mean_and_variance(samples, num_networks=cfg["num_networks"])
+            # mean = stat[1] * mean + stat[0]
 
             NLL = evaluate_with_NLL(mean, var, target.tolist())  # compute the Negative log likelihood with mean, var, target value(label)
             RMSE = evaluate_with_RMSE(mean, target.tolist())
@@ -254,10 +257,10 @@ def compute_test_loss(model: nn.Module, test_set_dir, batch_size, num_worker, de
 
 def evaluate_with_NLL(mean, var, label):
 
-    # epsilon = 1e-3
-    # var[var==0] =epsilon # replace where the value is zero to small number(epsilon) to prevent the operation being devided by zero
+    epsilon = 1e-6
+    var[var==0] = epsilon # replace where the value is zero to small number(epsilon) to prevent the operation being devided by zero
     # var[var<epsilon] = epsilon
-    NLL = np.log(var)*0.5 + np.divide(np.square(label-mean),(2*(var)))
+    NLL = np.log(var)*0.5 + np.divide(np.square(label-mean), (2*(var)))
     NLL[NLL <= - 100] = -100
     # NLL[NLL >= 100] = 100
 

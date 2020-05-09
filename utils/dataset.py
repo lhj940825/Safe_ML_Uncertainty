@@ -45,15 +45,15 @@ class UCIDataset(Dataset):
         self.X = data[:, :-1]
         self.Y = data[:, -1]
         # #Keep the stat params for normalization.
-        # self.stat = np.asarray([[np.mean(self.X), np.mean(self.Y)], # code for normalization new normalization
-        #                         [np.std(self.X), np.std(self.Y)]])
+        self.stat = np.asarray([np.mean(self.Y, axis=0), np.std(self.Y, axis=0)])
 
         # self.X = (self.X - np.min(self.X)) / (np.max(self.X) - np.min(self.X))
         self.X = scaler.fit_transform(self.X)
+        # self.Y = scaler.fit_transform(self.Y.reshape(-1, 1))
 
         # code for normalization new normalization
-        # if not testing:
-        #     self.Y = scaler.fit_transform(self.Y.reshape(-1, 1))
+        # if testing:
+        #     self.Y = self.Y * self.stat[1] + self.stat[0]
 
         #self.Y = scaler.fit_transform(self.Y.reshape(-1, 1))
 
@@ -74,8 +74,8 @@ class UCIDataset(Dataset):
         a = torch.tensor(x, dtype=torch.float)
         b = torch.tensor(y, dtype=torch.float).view(-1)
 
-        return torch.tensor(x, dtype=torch.float), torch.tensor(y, dtype=torch.float).view(-1)# return in form of tensor
-        # return torch.tensor(x, dtype=torch.float), torch.tensor(y, dtype=torch.float).view(-1), self.stat # code for normalization new normalization
+        # return torch.tensor(x, dtype=torch.float), torch.tensor(y, dtype=torch.float).view(-1)# return in form of tensor
+        return torch.tensor(x, dtype=torch.float), torch.tensor(y, dtype=torch.float).view(-1), self.stat # code for normalization new normalization
 
 
 class WineDataset(Dataset):
@@ -108,7 +108,8 @@ class WineDataset(Dataset):
 
 def dataset_split(dataset, fname, tar_split=-1, split_ratio=0.1):
     X = dataset[:, :tar_split]
-    Y = dataset[:, tar_split:]
+    Y = dataset[:, tar_split]
+    # Y = dataset[:, tar_split:] #Currently we only use one target feature for all datasets. This line is for multi targets and is commented
 
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=split_ratio, random_state=2020, shuffle=True)
     train = np.hstack([X_train, Y_train.reshape(len(X_train), -1)])
@@ -117,8 +118,12 @@ def dataset_split(dataset, fname, tar_split=-1, split_ratio=0.1):
     np.savetxt(fname + "_train.csv", train, delimiter=",")
     np.savetxt(fname + "_test.csv", test, delimiter=",")
 
-    # train = np.genfromtxt(fname + "_train.csv", delimiter=',')
-    # test = np.genfromtxt(fname + "_train.csv", delimiter=',')
+    train = np.genfromtxt(fname + "_train.csv", delimiter=',')
+    test = np.genfromtxt(fname + "_test.csv", delimiter=',')
+    mean_train = np.mean(train, axis=0)
+    std_train = np.std(train, axis=0)
+    mean_test = np.mean(test, axis=0)
+    std_test = np.std(test, axis=0)
 
 if __name__ == "__main__":
     data_dirs = {}
@@ -135,7 +140,9 @@ if __name__ == "__main__":
     for key, data_dir in data_dirs.items():
         os.makedirs(data_dir, exist_ok=True)
         data_files[key] = os.path.join(data_dir, key + ".csv")
-        datasets[key] = np.genfromtxt(data_files[key], delimiter=',')
+        datasets[key] = np.genfromtxt(data_files[key], delimiter=',')[1:]
+        mean = np.mean(datasets[key], axis=0)
+        std = np.std(datasets[key], axis=0)
         dataset_split(datasets[key], os.path.join(data_dir, key), tar_split=target_splits[key])
 
     print("finished")

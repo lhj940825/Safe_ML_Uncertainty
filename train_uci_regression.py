@@ -15,10 +15,11 @@ if __name__ == "__main__":
     #Create directory for storing results
     output_dirs = {}
     output_dirs["boston"] = os.path.join("./", "output", "boston")
-
-    #output_dirs["wine"] = os.path.join("./", "output", "wine")
+    output_dirs["wine"] = os.path.join("./", "output", "wine")
     output_dirs["power_plant"] = os.path.join("./", "output", "power_plant")
     output_dirs["concrete"] = os.path.join("./", "output", "concrete")
+    output_dirs["energy"] = os.path.join("./", "output", "energy")
+    output_dirs["kin8nm"] = os.path.join("./", "output", "kin8nm")
 
     ckpt_dirs = {}
     for key, val in output_dirs.items():
@@ -43,9 +44,11 @@ if __name__ == "__main__":
 
     data_files = {}
     data_files["boston"] = ["boston_train.csv", "boston_test.csv"]
-    #data_files["wine"] = ["train_winequality-red.csv", "test_winequality-red.csv"]
+    data_files["wine"] = ["train_winequality-red.csv", "test_winequality-red.csv"]
     data_files["power_plant"] = ["pp_train.csv", "pp_test.csv"]
     data_files["concrete"] = ["concrete_train.csv", "concrete_test.csv"]
+    data_files["energy"] = ["energy_train.csv", "energy_test.csv"]
+    data_files["kin8nm"] = ["kin8nm_train.csv", "kin8nm_test.csv"]
 
     train_datasets = {}
     train_loaders = {}
@@ -98,6 +101,7 @@ if __name__ == "__main__":
     trainers = {}
 
     for key, model in models.items():
+        print("*******************************Training {}*******************************\n".format(key))
         trainers[key] = Trainer(model=model,
                               model_fn=model_fn,
                               model_fn_eval=model_fn_eval,
@@ -106,14 +110,15 @@ if __name__ == "__main__":
                               grad_norm_clip=cfg["grad_norm_clip"],
                               tb_logger=tb_loggers[key])
 
-        #trainers[key].train(num_epochs=cfg["num_epochs"],
-        #                  train_loader=train_loaders[key],
-        #                  eval_loader=eval_loaders[key],
-        #                  ckpt_save_interval=cfg["ckpt_save_interval"],
-        #                  starting_iteration=starting_iteration,
-        #                  starting_epoch=starting_epoch)
+        trainers[key].train(num_epochs=cfg["num_epochs"],
+                         train_loader=train_loaders[key],
+                         eval_loader=eval_loaders[key],
+                         ckpt_save_interval=cfg["ckpt_save_interval"],
+                         starting_iteration=starting_iteration,
+                         starting_epoch=starting_epoch)
 
-        # draw_loss_trend_figure(key, trainers[key].train_loss, trainers[key].eval_loss, len(trainers[key].train_loss), output_dirs[key])
+        draw_loss_trend_figure(key, trainers[key].train_loss, trainers[key].eval_loss, len(trainers[key].train_loss), output_dirs[key])
+        print("*******************************Finished training {}*******************************\n".format(key))
 
 
     #Testing
