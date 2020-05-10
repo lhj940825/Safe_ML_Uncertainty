@@ -55,8 +55,6 @@ class UCIDataset(Dataset):
         # if testing:
         #     self.Y = self.Y * self.stat[1] + self.stat[0]
 
-        #self.Y = scaler.fit_transform(self.Y.reshape(-1, 1))
-
         self.input_dim = len(self.X[0])
 
         self.transform = transform

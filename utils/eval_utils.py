@@ -259,10 +259,12 @@ def evaluate_with_NLL(mean, var, label):
 
     epsilon = 1e-6
     var[var==0] = epsilon # replace where the value is zero to small number(epsilon) to prevent the operation being devided by zero
-    # var[var<epsilon] = epsilon
-    NLL = np.log(var)*0.5 + np.divide(np.square(label-mean), (2*(var)))
-    NLL[NLL <= - 100] = -100
-    # NLL[NLL >= 100] = 100
+    a = np.log(var)*0.5
+    b = np.divide(np.square(label-mean), (2*(var)))
+    b[b >= 5] = 5
+    NLL = a + b
+    # NLL = np.log(var)*0.5 + np.divide(np.square(label-mean), (2*(var)))
+    # NLL[NLL <= -100] = -100
 
     return NLL
 
