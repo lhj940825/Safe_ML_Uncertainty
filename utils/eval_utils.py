@@ -278,7 +278,11 @@ def compute_mean_and_variance(samples, num_networks):
 
     mean = np.mean(samples, axis=1) #shape(mean) = [batch_size, num_networks]
     # print('mean shape', np.shape(mean), mean)
-    var =(np.sum(np.square(samples),axis=1))/num_networks - np.square(mean) # shape(var) = [Batch size, num_networks]
+    var1 =(np.sum(np.square(samples),axis=1))/num_networks - np.square(mean) # shape(var) = [Batch size, num_networks]
+    var = np.square(np.std(samples, axis=1))
+    a = var1[var1 < 0]
+    if len(a) > 0:
+        print(a)
 
     return np.reshape(mean,(-1, 1)), np.reshape(var,(-1,1))
 

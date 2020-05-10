@@ -110,14 +110,14 @@ if __name__ == "__main__":
                               grad_norm_clip=cfg["grad_norm_clip"],
                               tb_logger=tb_loggers[key])
 
-        trainers[key].train(num_epochs=cfg["num_epochs"],
-                         train_loader=train_loaders[key],
-                         eval_loader=eval_loaders[key],
-                         ckpt_save_interval=cfg["ckpt_save_interval"],
-                         starting_iteration=starting_iteration,
-                         starting_epoch=starting_epoch)
-
-        draw_loss_trend_figure(key, trainers[key].train_loss, trainers[key].eval_loss, len(trainers[key].train_loss), output_dirs[key])
+        # trainers[key].train(num_epochs=cfg["num_epochs"],
+        #                  train_loader=train_loaders[key],
+        #                  eval_loader=eval_loaders[key],
+        #                  ckpt_save_interval=cfg["ckpt_save_interval"],
+        #                  starting_iteration=starting_iteration,
+        #                  starting_epoch=starting_epoch)
+        #
+        # draw_loss_trend_figure(key, trainers[key].train_loss, trainers[key].eval_loss, len(trainers[key].train_loss), output_dirs[key])
         print("*******************************Finished training {}*******************************\n".format(key))
 
 
