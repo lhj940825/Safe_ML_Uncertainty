@@ -59,12 +59,12 @@ if __name__ == "__main__":
         train_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[0]))
         train_loaders[key] = torch.utils.data.DataLoader(train_datasets[key],
                                                          batch_size=cfg["batch_size"],
-                                                         num_workers=0,
+                                                         num_workers=2,
                                                          collate_fn=train_datasets[key].collate_batch)
         eval_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[0]), testing=True)
         eval_loaders[key] = torch.utils.data.DataLoader(eval_datasets[key],
                                                         batch_size=cfg["batch_size"],
-                                                        num_workers=0,
+                                                        num_workers=2,
                                                         collate_fn=eval_datasets[key].collate_batch)
 
     # dataiter = iter(train_loader_bos)
@@ -116,66 +116,15 @@ if __name__ == "__main__":
                               grad_norm_clip=cfg["grad_norm_clip"],
                               tb_logger=tb_loggers[key])
 
-        # trainers[key].train(num_epochs=cfg["num_epochs"],
-        #                  train_loader=train_loaders[key],
-        #                  eval_loader=eval_loaders[key],
-        #                  ckpt_save_interval=cfg["ckpt_save_interval"],
-        #                  starting_iteration=starting_iteration,
-        #                  starting_epoch=starting_epoch)
-        #
-        # draw_loss_trend_figure(key, trainers[key].train_loss, trainers[key].eval_loss, len(trainers[key].train_loss), output_dirs[key])
+        trainers[key].train(num_epochs=cfg["num_epochs"],
+                         train_loader=train_loaders[key],
+                         eval_loader=eval_loaders[key],
+                         ckpt_save_interval=cfg["ckpt_save_interval"],
+                         starting_iteration=starting_iteration,
+                         starting_epoch=starting_epoch)
+
+        draw_loss_trend_figure(key, trainers[key].train_loss, trainers[key].eval_loss, len(trainers[key].train_loss), output_dirs[key])
         print("*******************************Finished training {}*******************************\n".format(key))
-
-
-    #Testing
-    print("Start testing")
-    # Currently the test dataset is the same as training set. TODO: K-Flod cross validation
-    test_datasets = {}
-    test_loaders = {}
-    for key, fname in data_files.items():
-        test_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[1]), testing=True)
-        test_loaders[key] = torch.utils.data.DataLoader(test_datasets[key],
-                                                        batch_size=cfg["batch_size"],
-                                                        num_workers=0,
-                                                        collate_fn=test_datasets[key].collate_batch)
-
-    cur_ckpts = {}
-    for key, ckpt_dir in ckpt_dirs.items():
-        # cur_ckpts[key] = '{}.pth'.format(os.path.join(ckpt_dir, "ckpt_e{}".format(trainers[key]._epoch + 1)))
-        # print("loading checkpoint ckpt_e{}".format(trainers[key]._epoch + 1))
-        cur_ckpts[key] = '{}.pth'.format(os.path.join(ckpt_dir, "ckpt_e{}".format(40)))
-        print("loading checkpoint ckpt_e{}".format(40))
-        models[key].load_state_dict(torch.load(cur_ckpts[key])["model_state"])
-        models[key].train()
-
-    # Summarize the result into table and save it
-    results = {}
-    for key, model in models.items():
-        print("==================================Evaluating {}==========================================".format(key))
-        result = eval(model, test_loader=test_loaders[key], cfg=cfg, output_dir=output_dirs[key], tb_logger=tb_loggers[key], title='test-'+key)
-        results[key] = result
-
-        #TODO below function is to generate figures for training dataset as requested by Joachim
-        eval_with_training_dataset(model, train_loaders[key], cfg=cfg, output_dir=output_dirs[key], tb_logger=tb_loggers[key], title='train-'+key)
-        print("Finished\n")
-
-    dataset_list = []
-    NLL_list = []
-    RMSE_list = []
-    for key, val in results.items():
-        dataset_list.append(key)
-        NLL_list.append(val[0][0])
-        RMSE_list.append(val[0][1])
-
-    err_df = pd.DataFrame(index=range(len(dataset_list)), columns=["Datasets", "RMSE", "NLL"])
-    # a = pd.DataFrame(dataset_list)
-    err_df["Datasets"] = pd.DataFrame(dataset_list)
-    err_df["RMSE"] = pd.DataFrame(RMSE_list)
-    err_df["NLL"] = pd.DataFrame(NLL_list)
-
-    err_sum_dir = "./output/err_summary"
-    os.makedirs(err_sum_dir, exist_ok=True)
-    err_df.to_csv(os.path.join(err_sum_dir, "err_summary.csv"))
 
     #Finalizing
     print("Training finished\n")
