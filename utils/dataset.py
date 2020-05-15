@@ -47,6 +47,15 @@ class UCIDataset(Dataset):
         # #Keep the stat params for normalization.
         self.stat = np.asarray([np.mean(self.Y, axis=0), np.std(self.Y, axis=0)])
 
+        # Computation of prior variance and noise from:
+        # https://github.com/HIPS/Probabilistic-Backpropagation/blob/60ece68fe535b3b9d74cc71f996145e982872f2e/theano/PBP_net/prior.py
+        n_samples = 3.0
+        a_sigma = 2.0 * n_samples
+        b_sigma = 2.0 * n_samples * self.stat[1]
+        a_sigma_hat_nat = a_sigma - 1
+        b_sigma_hat_nat = -b_sigma
+        self.prior = np.asarray([a_sigma_hat_nat + 1, -b_sigma_hat_nat])
+
         # self.X = (self.X - np.min(self.X)) / (np.max(self.X) - np.min(self.X))
         self.X = scaler.fit_transform(self.X)
         # self.Y = scaler.fit_transform(self.Y.reshape(-1, 1))
@@ -63,6 +72,8 @@ class UCIDataset(Dataset):
         return len(self.Y)
 
     def __getitem__(self, idx):
+        rtn_dict = {}
+
         x = np.asarray(self.X[idx])
         y = np.asarray(self.Y[idx])
 
@@ -72,9 +83,24 @@ class UCIDataset(Dataset):
         a = torch.tensor(x, dtype=torch.float)
         b = torch.tensor(y, dtype=torch.float).view(-1)
 
-        # return torch.tensor(x, dtype=torch.float), torch.tensor(y, dtype=torch.float).view(-1)# return in form of tensor
-        return torch.tensor(x, dtype=torch.float), torch.tensor(y, dtype=torch.float).view(-1), self.stat # code for normalization new normalization
+        rtn_dict["input"] = x
+        rtn_dict["target"] = y
+        rtn_dict["stat"] = self.stat
+        rtn_dict["prior"] = self.prior
 
+        # return torch.tensor(x, dtype=torch.float), torch.tensor(y, dtype=torch.float).view(-1)# return in form of tensor
+        # return torch.tensor(x, dtype=torch.float), torch.tensor(y, dtype=torch.float).view(-1), self.stat # code for normalization new normalization
+        return rtn_dict
+
+    def collate_batch(self, batch):
+        rtn_dict = {}
+        for k, _ in batch[0].items():
+            if k in ["input", "target"]:
+                rtn_dict[k] = np.stack([sample[k] for sample in batch], axis=0)
+        rtn_dict["stat"] = self.stat
+        rtn_dict["prior"] = self.prior
+
+        return rtn_dict
 
 class WineDataset(Dataset):
     def __init__(self, data_path, transform=None, testing=False):
