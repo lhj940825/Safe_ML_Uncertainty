@@ -20,6 +20,10 @@ if __name__ == "__main__":
     output_dirs["concrete"] = os.path.join("./", "output", "concrete")
     output_dirs["energy"] = os.path.join("./", "output", "energy")
     output_dirs["kin8nm"] = os.path.join("./", "output", "kin8nm")
+    output_dirs["naval"] = os.path.join("./", "output", "naval")
+    output_dirs["yacht"] = os.path.join("./", "output", "yacht")
+    output_dirs["protein"] = os.path.join("./", "output", "protein")
+    output_dirs["year"] = os.path.join("./", "output", "year")
 
     ckpt_dirs = {}
     for key, val in output_dirs.items():
@@ -49,12 +53,17 @@ if __name__ == "__main__":
     data_files["concrete"] = ["concrete_train.csv", "concrete_test.csv"]
     data_files["energy"] = ["energy_train.csv", "energy_test.csv"]
     data_files["kin8nm"] = ["kin8nm_train.csv", "kin8nm_test.csv"]
+    data_files["naval"] = ["naval_train.csv", "naval_test.csv"]
+    data_files["yacht"] = ["yacht_train.csv", "yacht_test.csv"]
+    data_files["protein"] = ["protein_train.csv", "protein_test.csv"]
+    data_files["year"] = ["year_train.csv", "year_test.csv"]
 
     train_datasets = {}
     train_loaders = {}
     eval_datasets = {}
     eval_loaders = {}
 
+    print("Prepare training data")
     for key, fname in data_files.items():
         train_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[0]))
         train_loaders[key] = torch.utils.data.DataLoader(train_datasets[key],
@@ -72,11 +81,14 @@ if __name__ == "__main__":
 
     #Prepare model
     print("Prepare model")
-    from model.fc import FC
+    from model.fc import FC, FC2
 
     models = {}
     for key, dataset in train_datasets.items():
-        models[key] = FC(dataset.input_dim, cfg["pdrop"])
+        if key in ["protein", "year"]:
+            models[key] = FC2(dataset.input_dim, cfg["pdrop"])
+        else:
+            models[key] = FC(dataset.input_dim, cfg["pdrop"])
         models[key].cuda()
 
     #Prepare training

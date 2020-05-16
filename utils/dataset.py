@@ -139,8 +139,8 @@ def dataset_split(dataset, fname, tar_split=-1, split_ratio=0.1):
     train = np.hstack([X_train, Y_train.reshape(len(X_train), -1)])
     test = np.hstack([X_test, Y_test.reshape(len(X_test), -1)])
 
-    np.savetxt(fname + "_train.csv", train, delimiter=",")
-    np.savetxt(fname + "_test.csv", test, delimiter=",")
+    np.savetxt(fname + "_train.csv", train, delimiter=",", fmt="%10.6f")
+    np.savetxt(fname + "_test.csv", test, delimiter=",", fmt="%10.6f")
 
     train = np.genfromtxt(fname + "_train.csv", delimiter=',')
     test = np.genfromtxt(fname + "_test.csv", delimiter=',')
@@ -156,6 +156,8 @@ if __name__ == "__main__":
     target_splits["energy"] = -2
     data_dirs["kin8nm"] = os.path.join("./..", "data", "kin8nm")
     target_splits["kin8nm"] = -1
+    data_dirs["protein"] = os.path.join("./..", "data", "protein")
+    target_splits["protein"] = -1
     # data_dirs["naval"] = os.path.join("./..", "data", "naval")
     # data_dirs["yacht"] = os.path.join("./..", "data", "yacht")
 
@@ -168,6 +170,13 @@ if __name__ == "__main__":
         mean = np.mean(datasets[key], axis=0)
         std = np.std(datasets[key], axis=0)
         dataset_split(datasets[key], os.path.join(data_dir, key), tar_split=target_splits[key])
+
+    naval_dir = os.path.join("./..", "data", "naval")
+    yacht_dir = os.path.join("./..", "data", "yacht")
+    naval = np.genfromtxt(os.path.join(naval_dir, "naval.txt"))
+    yacht = np.genfromtxt(os.path.join(yacht_dir, "yacht.data"))
+    dataset_split(naval, os.path.join(naval_dir, "naval"), tar_split=-2)
+    dataset_split(yacht, os.path.join(yacht_dir, "yacht"))
 
     print("finished")
 
