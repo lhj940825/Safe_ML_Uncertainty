@@ -20,6 +20,10 @@ if __name__ == "__main__":
     output_dirs["concrete"] = os.path.join("./", "output", "concrete")
     output_dirs["energy"] = os.path.join("./", "output", "energy")
     output_dirs["kin8nm"] = os.path.join("./", "output", "kin8nm")
+    output_dirs["naval"] = os.path.join("./", "output", "naval")
+    output_dirs["yacht"] = os.path.join("./", "output", "yacht")
+    output_dirs["protein"] = os.path.join("./", "output", "protein")
+    output_dirs["year"] = os.path.join("./", "output", "year")
 
     ckpt_dirs = {}
     for key, val in output_dirs.items():
@@ -43,34 +47,50 @@ if __name__ == "__main__":
         data_dirs[key] = os.path.join("./data", key)
 
     data_files = {}
-    data_files["boston"] = ["boston_train.csv", "boston_test.csv"]
-    data_files["wine"] = ["train_winequality-red.csv", "test_winequality-red.csv"]
-    data_files["power_plant"] = ["pp_train.csv", "pp_test.csv"]
-    data_files["concrete"] = ["concrete_train.csv", "concrete_test.csv"]
-    data_files["energy"] = ["energy_train.csv", "energy_test.csv"]
-    data_files["kin8nm"] = ["kin8nm_train.csv", "kin8nm_test.csv"]
+    for key, _ in data_dirs.items():
+        data_files[key] = ["{}_train.csv".format(key), "{}_eval.csv".format(key), "{}_test.csv".format(key)]
+    # data_files["boston"] = ["boston_train.csv", "boston_test.csv"]
+    # data_files["wine"] = ["wine_train.csv", "test_winequality-red.csv"]
+    # data_files["power_plant"] = ["pp_train.csv", "pp_test.csv"]
+    # data_files["concrete"] = ["concrete_train.csv", "concrete_test.csv"]
+    # data_files["energy"] = ["energy_train.csv", "energy_test.csv"]
+    # data_files["kin8nm"] = ["kin8nm_train.csv", "kin8nm_test.csv"]
+    # data_files["naval"] = ["naval_train.csv", "naval_test.csv"]
+    # data_files["yacht"] = ["yacht_train.csv", "yacht_test.csv"]
+    # data_files["protein"] = ["protein_train.csv", "protein_test.csv"]
+    # data_files["year"] = ["year_train.csv", "year_test.csv"]
 
     train_datasets = {}
     train_loaders = {}
     eval_datasets = {}
     eval_loaders = {}
 
+    print("Prepare training data")
     for key, fname in data_files.items():
         train_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[0]))
-        train_loaders[key] = torch.utils.data.DataLoader(train_datasets[key], batch_size=cfg["batch_size"], num_workers=0)
-        eval_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[0]), testing=True)
-        eval_loaders[key] = torch.utils.data.DataLoader(eval_datasets[key], batch_size=cfg["batch_size"], num_workers=0)
+        train_loaders[key] = torch.utils.data.DataLoader(train_datasets[key],
+                                                         batch_size=cfg["batch_size"],
+                                                         num_workers=2,
+                                                         collate_fn=train_datasets[key].collate_batch)
+        eval_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[1]), testing=True)
+        eval_loaders[key] = torch.utils.data.DataLoader(eval_datasets[key],
+                                                        batch_size=cfg["batch_size"],
+                                                        num_workers=2,
+                                                        collate_fn=eval_datasets[key].collate_batch)
 
     # dataiter = iter(train_loader_bos)
     # data, target = dataiter.next()
 
     #Prepare model
     print("Prepare model")
-    from model.fc import FC
+    from model.fc import FC, FC2
 
     models = {}
     for key, dataset in train_datasets.items():
-        models[key] = FC(dataset.input_dim, cfg["pdrop"])
+        if key in ["protein", "year"]:
+            models[key] = FC2(dataset.input_dim, cfg["pdrop"])
+        else:
+            models[key] = FC(dataset.input_dim, cfg["pdrop"])
         models[key].cuda()
 
     #Prepare training
@@ -110,70 +130,18 @@ if __name__ == "__main__":
                               grad_norm_clip=cfg["grad_norm_clip"],
                               tb_logger=tb_loggers[key])
 
-        #trainers[key].train(num_epochs=cfg["num_epochs"],
-        #                 train_loader=train_loaders[key],
-        #                 eval_loader=eval_loaders[key],
-        #                 ckpt_save_interval=cfg["ckpt_save_interval"],
-        #                 starting_iteration=starting_iteration,
-        #                 starting_epoch=starting_epoch)
 
-        # draw_loss_trend_figure(key, trainers[key].train_loss, trainers[key].eval_loss, len(trainers[key].train_loss), output_dirs[key])
+        trainers[key].train(num_epochs=cfg["num_epochs"],
+                         train_loader=train_loaders[key],
+                         eval_loader=eval_loaders[key],
+                         ckpt_save_interval=cfg["ckpt_save_interval"],
+                         starting_iteration=starting_iteration,
+                         starting_epoch=starting_epoch)
+
+        draw_loss_trend_figure(key, trainers[key].train_loss, trainers[key].eval_loss, len(trainers[key].train_loss), output_dirs[key])
         print("*******************************Finished training {}*******************************\n".format(key))
 
 
-    #Testing
-    print("Start testing")
-    # Currently the test dataset is the same as training set. TODO: K-Flod cross validation
-    test_datasets = {}
-    test_loaders = {}
-    for key, fname in data_files.items():
-        test_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[1]), testing=True)
-        test_loaders[key] = torch.utils.data.DataLoader(test_datasets[key], batch_size=cfg["batch_size"], num_workers=0)
-
-    cur_ckpts = {}
-    for key, ckpt_dir in ckpt_dirs.items():
-        # cur_ckpts[key] = '{}.pth'.format(os.path.join(ckpt_dir, "ckpt_e{}".format(trainers[key]._epoch + 1)))
-        # print("loading checkpoint ckpt_e{}".format(trainers[key]._epoch + 1))
-        cur_ckpts[key] = '{}.pth'.format(os.path.join(ckpt_dir, "ckpt_e{}".format(40)))
-        print("loading checkpoint ckpt_e{}".format(40))
-        models[key].load_state_dict(torch.load(cur_ckpts[key])["model_state"])
-        models[key].train()
-
-    # Summarize the result into table and save it
-    results = {}
-    for key, model in models.items():
-        print("==================================Evaluating {}==========================================".format(key))
-        result = eval(model, test_loader=test_loaders[key], cfg=cfg, output_dir=output_dirs[key], tb_logger=tb_loggers[key], title='test-'+key)
-        results[key] = result
-
-        #TODO below function is to generate figures for training dataset as requested by Joachim
-        eval_with_training_dataset(model, train_loaders[key], cfg=cfg, output_dir=output_dirs[key], tb_logger=tb_loggers[key], title='train-'+key)
-        print("Finished\n")
-
-    dataset_list = []
-    NLL_list = []
-    RMSE_list = []
-    NLL_over_cap_cnt = []
-    cap = 0
-    for key, val in results.items():
-        dataset_list.append(key)
-        NLL_list.append(val[0][0])
-        RMSE_list.append(val[0][1])
-        NLL_over_cap_cnt.append(val[2][0])
-        cap = val[2][1]
-
-    err_df = pd.DataFrame(index=range(len(dataset_list)), columns=["Datasets", "RMSE", "NLL"])
-    # a = pd.DataFrame(dataset_list)
-    err_df["Datasets"] = pd.DataFrame(dataset_list)
-    err_df["RMSE"] = pd.DataFrame(RMSE_list)
-    err_df["NLL"] = pd.DataFrame(NLL_list)
-
-    err_sum_dir = "./output/err_summary"
-    os.makedirs(err_sum_dir, exist_ok=True)
-    err_df.to_csv(os.path.join(err_sum_dir, "err_summary.csv"))
-
-    plot_NLL_cap_cnt(dataset_list, NLL_over_cap_cnt, cap, err_sum_dir)
-
     #Finalizing
-    print("Analysis finished\n")
+    print("Training finished\n")
     #TODO: integrate logging, visualiztion, GPU data parallel etc in the future

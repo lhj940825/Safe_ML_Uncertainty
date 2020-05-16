@@ -13,17 +13,17 @@ from model import Wine_FC
 # const variable
 cap = 5
 
-def model_fn(model, data):
-    rtn_dict = {}
+def model_fn(model, batch):
     #unpack data
     # input, target = data
     # a = torch.mean(input, dim=0)
     # b = torch.std(input, dim=0)
     # c = torch.std(input[:, 0])
-    input, target, _ = data # code for normalization new normalization
+    # input, target, _ = data # code for normalization new normalization
     #Move data to GPU
-    input = input.cuda(non_blocking=True)
-    target = target.cuda(non_blocking=True)
+    input = torch.from_numpy(batch["input"]).cuda(non_blocking=True).float()
+    target = torch.from_numpy(batch["target"]).cuda(non_blocking=True).float()
+    target = target.reshape(-1, 1)
 
     pred = model(input)
 
@@ -38,10 +38,15 @@ def model_fn_eval(model, eval_loader):
         # loss = model_fn(model, batch)
 
         # input, target = batch
-        input, target, stat = batch # code for normalization new normalization
-        input = input.cuda(non_blocking=True)
-        target = target.cuda(non_blocking=True)
-        # stat = stat.cuda(non_blocking=True)[0] # code for normalization new normalization
+        input = torch.from_numpy(batch["input"]).cuda(non_blocking=True).float()
+        target = torch.from_numpy(batch["target"]).cuda(non_blocking=True).float()
+        target = target.reshape(-1, 1)
+        stat = batch["stat"]
+        prior = batch["prior"]
+        # input, target, stat = batch # code for normalization new normalization
+        # input = input.cuda(non_blocking=True)
+        # target = target.cuda(non_blocking=True)
+        # # stat = stat.cuda(non_blocking=True)[0] # code for normalization new normalization
         pred = model(input)
 
         #stat = [Y_mean, Y_std]
@@ -63,10 +68,13 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
 
         for cur_it, batch in enumerate(test_loader):
             # input, target = batch
-            input, target, stat = batch # code for normalization new normalization
-            input = input.cuda(non_blocking=True)
-            target = target.cuda(non_blocking=True)
+            input = torch.from_numpy(batch["input"]).cuda(non_blocking=True).float()
+            target = torch.from_numpy(batch["target"]).cuda(non_blocking=True).float()
+            target = target.reshape(-1, 1)
+            stat = batch["stat"]
+            prior = batch["prior"]
             # stat = stat.cuda(non_blocking=True)[0] # code for normalization new normalization
+            v_noise = prior[1] / (prior[0] - 1) * stat[1] ** 2
 
             samples = None
             for i in range(cfg["num_networks"]):  # By MC dropout, samples the network output several times(=num_networks) given the same input in order to compute the mean and variance for such given input
@@ -84,7 +92,7 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
             mean, var = compute_mean_and_variance(samples, num_networks=cfg["num_networks"])
             # mean = stat[1] * mean + stat[0]
 
-            NLL = evaluate_with_NLL(mean, var, target.tolist())  # compute the Negative log likelihood with mean, var, target value(label)
+            NLL = evaluate_with_NLL(mean, var, target.tolist(), v_noise=v_noise)  # compute the Negative log likelihood with mean, var, target value(label)
             RMSE = evaluate_with_RMSE(mean, target.tolist())
 
             sample_M_distance, gt_M_distance =assess_uncertainty_realism(gt_label=target.tolist(),sample=model(input).tolist(), mean=mean, var=var)
@@ -147,10 +155,13 @@ def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=N
 
         for cur_it, batch in enumerate(train_loader):
             # input, target = batch
-            input, target, stat = batch # code for normalization new normalization
-            input = input.cuda(non_blocking=True)
-            target = target.cuda(non_blocking=True)
+            input = torch.from_numpy(batch["input"]).cuda(non_blocking=True).float()
+            target = torch.from_numpy(batch["target"]).cuda(non_blocking=True).float()
+            target = target.reshape(-1, 1)
+            stat = batch["stat"]
+            prior = batch["prior"]
             # stat = stat.cuda(non_blocking=True)[0] # code for normalization new normalization
+            v_noise = prior[1] / (prior[0] - 1) * stat[1] ** 2
 
             samples = None
             for i in range(cfg["num_networks"]):  # By MC dropout, samples the network output several times(=num_networks) given the same input in order to compute the mean and variance for such given input
@@ -168,7 +179,7 @@ def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=N
             mean, var = compute_mean_and_variance(samples, num_networks=cfg["num_networks"])
             # mean = stat[1] * mean + stat[0]
 
-            NLL = evaluate_with_NLL(mean, var, target.tolist())  # compute the Negative log likelihood with mean, var, target value(label)
+            NLL = evaluate_with_NLL(mean, var, target.tolist(), v_noise=v_noise)  # compute the Negative log likelihood with mean, var, target value(label)
             RMSE = evaluate_with_RMSE(mean, target.tolist())
 
             sample_M_distance, gt_M_distance =assess_uncertainty_realism(gt_label=target.tolist(),sample=model(input).tolist(), mean=mean, var=var)
@@ -260,16 +271,22 @@ def compute_test_loss(model: nn.Module, test_set_dir, batch_size, num_worker, de
     return test_loss
 
 
-def evaluate_with_NLL(mean, var, label):
-
+def evaluate_with_NLL(mean, var, label, v_noise=0.0):
+    # v_noise = 1.0
     epsilon = 1e-6
+    var = var + v_noise
     var[var==0] = epsilon # replace where the value is zero to small number(epsilon) to prevent the operation being devided by zero
     a = np.log(var)*0.5
     b = np.divide(np.square(label-mean), (2*(var)))
-    b[b >= 5] = 5
+    # b[b >= 100] = 100
     NLL = a + b
     # NLL = np.log(var)*0.5 + np.divide(np.square(label-mean), (2*(var)))
     # NLL[NLL <= -100] = -100
+
+    # a = -0.5 * np.log(2 * np.pi * var)
+    # b = - 0.5 * (label - mean) ** 2 / var
+    # b[b <= -100] = -100
+    # NLL = a + b
 
     return NLL
 
@@ -285,7 +302,6 @@ def compute_mean_and_variance(samples, num_networks):
     # print('mean shape', np.shape(mean), mean)
     
     var = np.square(np.std(samples, axis=1))
-
 
     return np.reshape(mean,(-1, 1)), np.reshape(var,(-1,1))
 
@@ -303,7 +319,8 @@ def assess_uncertainty_realism(gt_label, sample, mean, var):
     :param var: sample variance of 50 samples
     :return: list of computed sample Mahalanobis distance and gt Mahalanobis distance
     """
-
+    epsilon = 1e-6
+    var[var == 0] = epsilon
     sample_M_distance = np.divide(np.square(sample-mean),var) # computed Mahalanobis distance given sample, but since the model output is 1D, we compute 1D version of Mahalanobis distance
     gt_M_distance = np.divide(np.square(gt_label-mean),var) # computed Mahalanobis distance given ground truth label
 
