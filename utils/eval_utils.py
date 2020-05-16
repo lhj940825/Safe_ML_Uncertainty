@@ -10,6 +10,8 @@ from utils.utils import *
 from model import Wine_FC
 # from utils.dataset import WineDataset
 
+# const variable
+cap = 5
 
 def model_fn(model, data):
     rtn_dict = {}
@@ -109,7 +111,9 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
     err_list = np.hstack([NLL_list.reshape(-1, 1), RMSE_list.reshape(-1, 1)])
 
     err_summary = np.asarray([[np.mean(NLL_list), np.mean(RMSE_list)],
-                              [np.std(NLL_list), np.std(RMSE_list)]])
+                              [np.std(NLL_list), np.std(RMSE_list)],
+                              [len(NLL_list[NLL_list>cap]), cap]]) # add the information of current cap-value and number of NLL values beyond such cap
+
 
     err_list = np.append(err_list, err_summary, axis=0)
 
@@ -191,7 +195,8 @@ def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=N
     err_list = np.hstack([NLL_list.reshape(-1, 1), RMSE_list.reshape(-1, 1)])
 
     err_summary = np.asarray([[np.mean(NLL_list), np.mean(RMSE_list)],
-                              [np.std(NLL_list), np.std(RMSE_list)]])
+                              [np.std(NLL_list), np.std(RMSE_list)],
+                              [len(NLL_list[NLL_list>cap]), cap]]) # add the information of current cap-value and number of NLL values beyond such cap
 
     err_list = np.append(err_list, err_summary, axis=0)
 
@@ -278,11 +283,9 @@ def compute_mean_and_variance(samples, num_networks):
 
     mean = np.mean(samples, axis=1) #shape(mean) = [batch_size, num_networks]
     # print('mean shape', np.shape(mean), mean)
-    var1 =(np.sum(np.square(samples),axis=1))/num_networks - np.square(mean) # shape(var) = [Batch size, num_networks]
+    
     var = np.square(np.std(samples, axis=1))
-    a = var1[var1 < 0]
-    if len(a) > 0:
-        print(a)
+
 
     return np.reshape(mean,(-1, 1)), np.reshape(var,(-1,1))
 

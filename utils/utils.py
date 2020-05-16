@@ -189,6 +189,27 @@ def plot_Mahalanobis_distance_with_Chi2_PDF(sample_M_distance_list, output_dir, 
 
     plt.show()
 
+def plot_NLL_cap_cnt(dataset_list, NLL_cap_cnt, cap, output_dir):
+    """
+    plot bar graph showing the number of NLL values beyond the cap for all datasets
+
+    :return:
+    """
+
+    y_pos = np.arange(len(dataset_list))
+    plt.bar(y_pos, NLL_cap_cnt, align='center', alpha=0.5)
+    plt.xticks(y_pos, dataset_list)
+    plt.ylabel('#NLL values beyond the cap')
+    plt.title('Counter of NLL values higher than cap: ' + str(cap))
+    figure_dir = os.path.join(output_dir, 'NLL_counter_cap ' + str(cap)+'.png')
+    plt.savefig(figure_dir)
+
+    plt.show()
+
+    #print(dataset_list, NLL_cap_cnt, cap)
+    #pass
+
+
 def get_train_or_test_figure_dir(output_dir, title):
     if 'train' in title: # when the figures are from training dataset
         figure_dir = os.path.join(output_dir, 'train')

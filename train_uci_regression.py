@@ -110,13 +110,13 @@ if __name__ == "__main__":
                               grad_norm_clip=cfg["grad_norm_clip"],
                               tb_logger=tb_loggers[key])
 
-        # trainers[key].train(num_epochs=cfg["num_epochs"],
-        #                  train_loader=train_loaders[key],
-        #                  eval_loader=eval_loaders[key],
-        #                  ckpt_save_interval=cfg["ckpt_save_interval"],
-        #                  starting_iteration=starting_iteration,
-        #                  starting_epoch=starting_epoch)
-        #
+        #trainers[key].train(num_epochs=cfg["num_epochs"],
+        #                 train_loader=train_loaders[key],
+        #                 eval_loader=eval_loaders[key],
+        #                 ckpt_save_interval=cfg["ckpt_save_interval"],
+        #                 starting_iteration=starting_iteration,
+        #                 starting_epoch=starting_epoch)
+
         # draw_loss_trend_figure(key, trainers[key].train_loss, trainers[key].eval_loss, len(trainers[key].train_loss), output_dirs[key])
         print("*******************************Finished training {}*******************************\n".format(key))
 
@@ -153,10 +153,14 @@ if __name__ == "__main__":
     dataset_list = []
     NLL_list = []
     RMSE_list = []
+    NLL_over_cap_cnt = []
+    cap = 0
     for key, val in results.items():
         dataset_list.append(key)
         NLL_list.append(val[0][0])
         RMSE_list.append(val[0][1])
+        NLL_over_cap_cnt.append(val[2][0])
+        cap = val[2][1]
 
     err_df = pd.DataFrame(index=range(len(dataset_list)), columns=["Datasets", "RMSE", "NLL"])
     # a = pd.DataFrame(dataset_list)
@@ -167,6 +171,8 @@ if __name__ == "__main__":
     err_sum_dir = "./output/err_summary"
     os.makedirs(err_sum_dir, exist_ok=True)
     err_df.to_csv(os.path.join(err_sum_dir, "err_summary.csv"))
+
+    plot_NLL_cap_cnt(dataset_list, NLL_over_cap_cnt, cap, err_sum_dir)
 
     #Finalizing
     print("Analysis finished\n")
