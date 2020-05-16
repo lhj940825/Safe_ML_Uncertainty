@@ -41,37 +41,20 @@ if __name__ == "__main__":
         data_dirs[key] = os.path.join("./data", key)
 
     data_files = {}
-    data_files["boston"] = ["boston_train.csv", "boston_test.csv"]
-    data_files["wine"] = ["train_winequality-red.csv", "test_winequality-red.csv"]
-    data_files["power_plant"] = ["pp_train.csv", "pp_test.csv"]
-    data_files["concrete"] = ["concrete_train.csv", "concrete_test.csv"]
-    data_files["energy"] = ["energy_train.csv", "energy_test.csv"]
-    data_files["kin8nm"] = ["kin8nm_train.csv", "kin8nm_test.csv"]
-    data_files["naval"] = ["naval_train.csv", "naval_test.csv"]
-    data_files["yacht"] = ["yacht_train.csv", "yacht_test.csv"]
-    data_files["protein"] = ["protein_train.csv", "protein_test.csv"]
-    data_files["year"] = ["year_train.csv", "year_test.csv"]
+    for key, _ in data_dirs.items():
+        data_files[key] = ["{}_train.csv".format(key), "{}_eval.csv".format(key), "{}_test.csv".format(key)]
 
     train_datasets = {}
     train_loaders = {}
     eval_datasets = {}
     eval_loaders = {}
 
-    print("Prepare training data")
     for key, fname in data_files.items():
         train_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[0]))
         train_loaders[key] = torch.utils.data.DataLoader(train_datasets[key],
                                                          batch_size=cfg["batch_size"],
                                                          num_workers=2,
                                                          collate_fn=train_datasets[key].collate_batch)
-        eval_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[0]), testing=True)
-        eval_loaders[key] = torch.utils.data.DataLoader(eval_datasets[key],
-                                                        batch_size=cfg["batch_size"],
-                                                        num_workers=2,
-                                                        collate_fn=eval_datasets[key].collate_batch)
-
-    # dataiter = iter(train_loader_bos)
-    # data, target = dataiter.next()
 
     # Prepare model
     print("Prepare model")
@@ -85,13 +68,18 @@ if __name__ == "__main__":
             models[key] = FC(dataset.input_dim, cfg["pdrop"])
         models[key].cuda()
 
+    # Logging
+    tb_loggers = {}
+    for key, val in output_dirs.items():
+        tb_loggers[key] = create_tb_logger(val)
+
     #Testing
     print("Start testing")
     # Currently the test dataset is the same as training set. TODO: K-Flod cross validation
     test_datasets = {}
     test_loaders = {}
     for key, fname in data_files.items():
-        test_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[1]), testing=True)
+        test_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[2]), testing=True)
         test_loaders[key] = torch.utils.data.DataLoader(test_datasets[key],
                                                         batch_size=cfg["batch_size"],
                                                         num_workers=0,

@@ -9,34 +9,11 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-#Old method, will be updated or deprecated
-def create_dataloader(data_path, batch_size, num_workers=2):
-    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-    trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-    return trainloader
-
-#Old method, will be updated or deprecated
-def create_test_dataloader(data_path, batch_size=1, num_workers=2):
-    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-    testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-    return testloader
-
 def data_to_torch_dataset(data, target):
     data = torch.tensor(data, dtype=torch.float)
     target = torch.tensor(target, dtype=torch.float).view(-1, 1)
     # target = torch.tensor(target, dtype=torch.long).view(-1, 1)
     return torch.utils.data.TensorDataset(data, target)
-
-def boston_dataset():
-    boston = datasets.load_boston()
-    data = boston.data
-    target = boston.target
-    feature_dim = len(boston.feature_names)
-    boston = data_to_torch_dataset(data, target)
-    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean=(0.0), std=(1.0))])
-    return data_to_torch_dataset(data, target), feature_dim
 
 class UCIDataset(Dataset):
     def __init__(self, data_path, transform=None, testing=False):
@@ -136,13 +113,17 @@ def dataset_split(dataset, fname, tar_split=-1, split_ratio=0.1):
     # Y = dataset[:, tar_split:] #Currently we only use one target feature for all datasets. This line is for multi targets and is commented
 
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=split_ratio, random_state=2020, shuffle=True)
+    X_train, X_eval, Y_train, Y_eval = train_test_split(X_train, Y_train, test_size=split_ratio, random_state=2020, shuffle=True)
     train = np.hstack([X_train, Y_train.reshape(len(X_train), -1)])
+    eval = np.hstack([X_eval, Y_eval.reshape(len(X_eval), -1)])
     test = np.hstack([X_test, Y_test.reshape(len(X_test), -1)])
 
     np.savetxt(fname + "_train.csv", train, delimiter=",", fmt="%10.6f")
+    np.savetxt(fname + "_eval.csv", train, delimiter=",", fmt="%10.6f")
     np.savetxt(fname + "_test.csv", test, delimiter=",", fmt="%10.6f")
 
     train = np.genfromtxt(fname + "_train.csv", delimiter=',')
+    eval = np.genfromtxt(fname + "_eval.csv", delimiter=',')
     test = np.genfromtxt(fname + "_test.csv", delimiter=',')
     mean_train = np.mean(train, axis=0)
     std_train = np.std(train, axis=0)
@@ -152,14 +133,21 @@ def dataset_split(dataset, fname, tar_split=-1, split_ratio=0.1):
 if __name__ == "__main__":
     data_dirs = {}
     target_splits = {}
+    data_dirs["boston"] = os.path.join("./..", "data", "boston")
+    target_splits["boston"] = -1
+    data_dirs["wine"] = os.path.join("./..", "data", "wine")
+    target_splits["wine"] = -1
+    data_dirs["power_plant"] = os.path.join("./..", "data", "power_plant")
+    target_splits["power_plant"] = -1
+    data_dirs["concrete"] = os.path.join("./..", "data", "concrete")
+    target_splits["concrete"] = -1
+
     data_dirs["energy"] = os.path.join("./..", "data", "energy")
     target_splits["energy"] = -2
     data_dirs["kin8nm"] = os.path.join("./..", "data", "kin8nm")
     target_splits["kin8nm"] = -1
     data_dirs["protein"] = os.path.join("./..", "data", "protein")
     target_splits["protein"] = -1
-    # data_dirs["naval"] = os.path.join("./..", "data", "naval")
-    # data_dirs["yacht"] = os.path.join("./..", "data", "yacht")
 
     data_files = {}
     datasets = {}
@@ -180,20 +168,3 @@ if __name__ == "__main__":
 
     print("finished")
 
-#     def __getitem__(self, item):
-#         x = np.asarray(self.X[item])
-#         y = np.asarray(self.Y[item])
-#
-#         if self.transform is not None:
-#             x = self.transform(x)
-#
-#         return torch.from_numpy(x), torch.from_numpy(y) #return in form of tensor
-#
-#
-# if __name__ == '__main__':
-#     #split_wine_dataset('./dataset/wine/winequality-white.csv')
-#     dataset = WineDataset('../dataset/wine/test_winequality-white.csv', None)
-#     data_loader = DataLoader(dataset,batch_size=1, shuffle=True, num_workers=0)
-#     print((next(iter(data_loader))))
-#     print(np.shape(next(iter(data_loader))[0]))
-# >>>>>>> lhj/wineDataset
