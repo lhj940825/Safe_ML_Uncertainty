@@ -132,6 +132,34 @@ def plot_scatter(NLL_list, RMSE_list, output_dir, title="fig"):
     plt.savefig(figure_dir)
     plt.show()
 
+def plot_scatter2(ground_truth, mean, var, output_dir, title):
+    """
+    scatter figure with 'ground_truth - mean' as x-axis and 'std' as y-axis
+
+    :param ground_truth: target label
+    :param mean: computed mean from network samples
+    :param var: computed variance
+    :param output_dir:
+    :param title:
+    :return:
+    """
+    #print('gt',len(ground_truth), np.shape(ground_truth))
+    #print('mean',len(mean), np.shape(mean))
+    #print('var',len(var), np.shape(var))
+    plt.scatter(ground_truth-mean, np.sqrt(var))
+    plt.title(title+ ': GT-mean and std ')
+    plt.xlabel('Ground Truth - mean')
+    plt.ylabel('std')
+
+    os.makedirs(output_dir, exist_ok=True)
+    figure_dir = os.path.join(output_dir, 'figures')
+    figure_dir = get_train_or_test_figure_dir(figure_dir, title)
+    os.makedirs(figure_dir, exist_ok=True)
+
+    figure_dir = os.path.join(figure_dir, title + '_GT-mean_and_std.png')
+    plt.savefig(figure_dir)
+    plt.show()
+
 
 
 def plot_Mahalanobis_distance(sample_M_distance_list, gt_M_distance_list, output_dir, title="fig"):

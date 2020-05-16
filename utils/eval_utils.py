@@ -60,7 +60,9 @@ def model_fn_eval(model, eval_loader):
 def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
     NLL_list = None
     RMSE_list = None
-
+    mean_list = None
+    variance_list = None
+    gt_list = None # to store all labels(ground truth)
     gt_M_distance_list = []
     sample_M_distance_list = []
 
@@ -105,9 +107,15 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
             if NLL_list is None:
                 NLL_list = NLL
                 RMSE_list = RMSE
+                mean_list = mean
+                variance_list = var
+                gt_list = target.tolist()
             else:
                 NLL_list = np.append(NLL_list, np.squeeze(NLL))
                 RMSE_list = np.append(RMSE_list, np.squeeze(RMSE))
+                mean_list = np.append(mean_list, np.squeeze(mean))
+                variance_list = np.append(variance_list, np.squeeze(var))
+                gt_list = np.append(gt_list, np.squeeze(target.tolist()))
 
             tb_logger.flush()
 
@@ -135,6 +143,7 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
 
     plot_and_save_histograms(NLL_list, RMSE_list, output_dir, title=title)
     plot_scatter(NLL_list, RMSE_list, output_dir, title=title)
+    plot_scatter2(gt_list, mean_list, variance_list, output_dir, title)
     plot_Mahalanobis_distance(sample_M_distance_list,gt_M_distance_list, output_dir=output_dir, title=title)
     plot_Mahalanobis_distance_with_Chi2_PDF(sample_M_distance_list,output_dir=output_dir,title=title)
     return err_summary
@@ -147,7 +156,9 @@ def eval_batch(model, data):
 def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=None, title=""):
     NLL_list = None
     RMSE_list = None
-
+    mean_list = None
+    variance_list = None
+    gt_list = None # to store all labels(ground truth)
     gt_M_distance_list = []
     sample_M_distance_list = []
 
@@ -192,9 +203,15 @@ def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=N
             if NLL_list is None:
                 NLL_list = NLL
                 RMSE_list = RMSE
+                mean_list = mean
+                variance_list = var
+                gt_list = target.tolist()
             else:
                 NLL_list = np.append(NLL_list, np.squeeze(NLL))
                 RMSE_list = np.append(RMSE_list, np.squeeze(RMSE))
+                mean_list = np.append(mean_list, np.squeeze(mean))
+                variance_list = np.append(variance_list, np.squeeze(var))
+                gt_list = np.append(gt_list, np.squeeze(target.tolist()))
 
             #tb_logger.flush()
 
@@ -221,6 +238,7 @@ def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=N
 
     plot_and_save_histograms(NLL_list, RMSE_list, output_dir, title=title)
     plot_scatter(NLL_list, RMSE_list, output_dir, title=title)
+    plot_scatter2(gt_list, mean_list, variance_list, output_dir, title)
     plot_Mahalanobis_distance(sample_M_distance_list,gt_M_distance_list, output_dir=output_dir, title=title)
     plot_Mahalanobis_distance_with_Chi2_PDF(sample_M_distance_list,output_dir=output_dir,title=title)
     return err_summary
@@ -275,6 +293,7 @@ def evaluate_with_NLL(mean, var, label, v_noise=0.0):
     # v_noise = 1.0
     epsilon = 1e-6
     var = var + v_noise
+    print(len(var[var<0]),'var being negative')
     var[var==0] = epsilon # replace where the value is zero to small number(epsilon) to prevent the operation being devided by zero
     a = np.log(var)*0.5
     b = np.divide(np.square(label-mean), (2*(var)))
