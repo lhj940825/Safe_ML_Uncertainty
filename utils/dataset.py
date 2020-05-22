@@ -35,11 +35,11 @@ class UCIDataset(Dataset):
 
         # self.X = (self.X - np.min(self.X)) / (np.max(self.X) - np.min(self.X))
         self.X = scaler.fit_transform(self.X)
-        # self.Y = scaler.fit_transform(self.Y.reshape(-1, 1))
+
 
         # code for normalization new normalization
-        # if testing:
-        #     self.Y = self.Y * self.stat[1] + self.stat[0]
+        if not testing:
+            self.Y = scaler.fit_transform(self.Y.reshape(-1, 1))
 
         self.input_dim = len(self.X[0])
 

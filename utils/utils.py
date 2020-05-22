@@ -45,7 +45,7 @@ def get_args_from_yaml(file):
     return conf
 
 
-def draw_loss_trend_figure(title, train_loss_lost, test_loss_list, epoch, output_dir):
+def draw_loss_trend_figure(title, epoch, train_loss_lost, test_loss_list=None, output_dir=None):
     """
     Draw and Save loss figure for given parameters
 
@@ -56,20 +56,23 @@ def draw_loss_trend_figure(title, train_loss_lost, test_loss_list, epoch, output
     :return:
     """
     epochs_train = np.arange(0, epoch, 1)
-    epochs_test = np.arange(1, epoch+1,1)
+
     plt.title(title)
     plt.xlabel('epochs')
     plt.ylabel('loss')
     plt.plot(epochs_train, train_loss_lost, label = 'train loss')
-    plt.plot(epochs_test, test_loss_list, label= 'test loss')
+    if test_loss_list is not None:
+        epochs_test = np.arange(1, epoch + 1, 1)
+        plt.plot(epochs_test, test_loss_list, label= 'validation loss')
     plt.legend(loc='best')
 
-    os.makedirs(output_dir, exist_ok=True)
-    figure_dir = os.path.join(output_dir, 'figures')
-    os.makedirs(figure_dir, exist_ok=True)
+    if output_dir is not None:
+        os.makedirs(output_dir, exist_ok=True)
+        figure_dir = os.path.join(output_dir, 'figures')
+        os.makedirs(figure_dir, exist_ok=True)
 
-    figure_dir = os.path.join(figure_dir, '{}_loss_fig.png'.format(title))
-    plt.savefig(figure_dir)
+        figure_dir = os.path.join(figure_dir, '{}_loss_fig.png'.format(title))
+        plt.savefig(figure_dir)
     plt.show()
 
 

@@ -32,6 +32,7 @@ def model_fn(model, batch):
     return loss
 
 def model_fn_eval(model, eval_loader):
+    model.eval()
     eval_loss = 0.0
     for it, batch in enumerate(eval_loader):
 
@@ -41,15 +42,10 @@ def model_fn_eval(model, eval_loader):
         input = torch.from_numpy(batch["input"]).cuda(non_blocking=True).float()
         target = torch.from_numpy(batch["target"]).cuda(non_blocking=True).float()
         target = target.reshape(-1, 1)
-        stat = batch["stat"]
+        stat = batch["stat"] # stat = [Y_mean, Y_std]
         prior = batch["prior"]
-        # input, target, stat = batch # code for normalization new normalization
-        # input = input.cuda(non_blocking=True)
-        # target = target.cuda(non_blocking=True)
-        # # stat = stat.cuda(non_blocking=True)[0] # code for normalization new normalization
-        pred = model(input)
 
-        #stat = [Y_mean, Y_std]
+        pred = model(input)
         # pred = stat[1] * pred + stat[0] # code for normalization new normalization
 
         loss = model.loss_fn(pred, target)
@@ -81,15 +77,15 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
             samples = None
             for i in range(cfg["num_networks"]):  # By MC dropout, samples the network output several times(=num_networks) given the same input in order to compute the mean and variance for such given input
                 if samples is None:
-                    samples = model(input).tolist()
-                    # out = stat[1] * model(input) + stat[0] # code for normalization new normalization
-                    # samples = out.tolist()
+                    # samples = model(input).tolist()
+                    out = stat[1] * model(input) + stat[0] # code for de-normalization
+                    samples = out.tolist()
                 else:
-                    model_output = model(input).tolist()
-                    samples = np.append(samples, np.asarray(model_output), axis=1)
-                    # out = stat[1] * model(input) + stat[0] # code for normalization new normalization
-                    # out = out.tolist()
-                    # samples = np.append(samples, np.asarray(out), axis=1)
+                    # model_output = model(input).tolist()
+                    # samples = np.append(samples, np.asarray(model_output), axis=1)
+                    out = stat[1] * model(input) + stat[0] # code for de-normalization
+                    out = out.tolist()
+                    samples = np.append(samples, np.asarray(out), axis=1)
 
             mean, var = compute_mean_and_variance(samples, num_networks=cfg["num_networks"])
             # mean = stat[1] * mean + stat[0]
@@ -177,15 +173,15 @@ def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=N
             samples = None
             for i in range(cfg["num_networks"]):  # By MC dropout, samples the network output several times(=num_networks) given the same input in order to compute the mean and variance for such given input
                 if samples is None:
-                    samples = model(input).tolist()
-                    # out = stat[1] * model(input) + stat[0] # code for normalization new normalization
-                    # samples = out.tolist()
+                    # samples = model(input).tolist()
+                    out = stat[1] * model(input) + stat[0] # code for de-normalization
+                    samples = out.tolist()
                 else:
-                    model_output = model(input).tolist()
-                    samples = np.append(samples, np.asarray(model_output), axis=1)
-                    # out = stat[1] * model(input) + stat[0] # code for normalization new normalization
-                    # out = out.tolist()
-                    # samples = np.append(samples, np.asarray(out), axis=1)
+                    # model_output = model(input).tolist()
+                    # samples = np.append(samples, np.asarray(model_output), axis=1)
+                    out = stat[1] * model(input) + stat[0] # code for de-normalization
+                    out = out.tolist()
+                    samples = np.append(samples, np.asarray(out), axis=1)
 
             mean, var = compute_mean_and_variance(samples, num_networks=cfg["num_networks"])
             # mean = stat[1] * mean + stat[0]
@@ -293,7 +289,7 @@ def evaluate_with_NLL(mean, var, label, v_noise=0.0):
     # v_noise = 1.0
     epsilon = 1e-6
     var = var + v_noise
-    print(len(var[var<0]),'var being negative')
+    # print(len(var[var<0]),'var being negative')
     var[var==0] = epsilon # replace where the value is zero to small number(epsilon) to prevent the operation being devided by zero
     a = np.log(var)*0.5
     b = np.divide(np.square(label-mean), (2*(var)))
