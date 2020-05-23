@@ -62,6 +62,8 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
     gt_M_distance_list = []
     sample_M_distance_list = []
 
+    dataset_name = output_dir.split("\\")[1]
+
     with torch.no_grad():
 
         for cur_it, batch in enumerate(test_loader):
@@ -70,9 +72,11 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
             target = torch.from_numpy(batch["target"]).cuda(non_blocking=True).float()
             target = target.reshape(-1, 1)
             stat = batch["stat"]
-            prior = batch["prior"]
+
+            #TODO prior is no more used to compute v-noise
+            #prior = batch["prior"]
             # stat = stat.cuda(non_blocking=True)[0] # code for normalization new normalization
-            v_noise = prior[1] / (prior[0] - 1) * stat[1] ** 2
+            #v_noise = prior[1] / (prior[0] - 1) * stat[1] ** 2
 
             samples = None
             for i in range(cfg["num_networks"]):  # By MC dropout, samples the network output several times(=num_networks) given the same input in order to compute the mean and variance for such given input
@@ -90,7 +94,7 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
             mean, var = compute_mean_and_variance(samples, num_networks=cfg["num_networks"])
             # mean = stat[1] * mean + stat[0]
 
-            NLL = evaluate_with_NLL(mean, var, target.tolist(), v_noise=v_noise)  # compute the Negative log likelihood with mean, var, target value(label)
+            NLL = evaluate_with_NLL(mean, var, target.tolist(), dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
             RMSE = evaluate_with_RMSE(mean, target.tolist())
 
             sample_M_distance, gt_M_distance =assess_uncertainty_realism(gt_label=target.tolist(),sample=model(input).tolist(), mean=mean, var=var)
@@ -158,6 +162,7 @@ def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=N
     gt_M_distance_list = []
     sample_M_distance_list = []
 
+    dataset_name = output_dir.split("\\")[1]
     with torch.no_grad():
 
         for cur_it, batch in enumerate(train_loader):
@@ -166,9 +171,11 @@ def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=N
             target = torch.from_numpy(batch["target"]).cuda(non_blocking=True).float()
             target = target.reshape(-1, 1)
             stat = batch["stat"]
-            prior = batch["prior"]
+
+            #TODO prior is no more used to compute v-noise
+            #prior = batch["prior"]
             # stat = stat.cuda(non_blocking=True)[0] # code for normalization new normalization
-            v_noise = prior[1] / (prior[0] - 1) * stat[1] ** 2
+            #v_noise = prior[1] / (prior[0] - 1) * stat[1] ** 2
 
             samples = None
             for i in range(cfg["num_networks"]):  # By MC dropout, samples the network output several times(=num_networks) given the same input in order to compute the mean and variance for such given input
@@ -186,7 +193,7 @@ def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=N
             mean, var = compute_mean_and_variance(samples, num_networks=cfg["num_networks"])
             # mean = stat[1] * mean + stat[0]
 
-            NLL = evaluate_with_NLL(mean, var, target.tolist(), v_noise=v_noise)  # compute the Negative log likelihood with mean, var, target value(label)
+            NLL = evaluate_with_NLL(mean, var, target.tolist(),dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
             RMSE = evaluate_with_RMSE(mean, target.tolist())
 
             sample_M_distance, gt_M_distance =assess_uncertainty_realism(gt_label=target.tolist(),sample=model(input).tolist(), mean=mean, var=var)
@@ -285,15 +292,35 @@ def compute_test_loss(model: nn.Module, test_set_dir, batch_size, num_worker, de
     return test_loss
 
 
-def evaluate_with_NLL(mean, var, label, v_noise=0.0):
-    # v_noise = 1.0
-    epsilon = 1e-6
-    var = var + v_noise
-    # print(len(var[var<0]),'var being negative')
-    var[var==0] = epsilon # replace where the value is zero to small number(epsilon) to prevent the operation being devided by zero
+def evaluate_with_NLL(mean, var, label, dataset_name, v_noise=1):
+    import yaml
+    #TODO 1e-3: naval(0.027,0.1515), yacht(2.193789627	1.52338537)
+    # 1e-2: boston(2.469, 2.739), energy(1.67, 1.71), kin8nm(0.106, -0.06)
+    # 1e-1: wine(0.51, 1.49), power plant(5.50, 2.92)
+    # 1: powerplant(5.46, 2.91), concrete(6.29, 2.945), year(8.806,2.89)
+
+
+    # load the std_target_train from mean_std.yaml file
+    yml_dir = os.path.join(os.getcwd(), 'configs\\mean_std.yml')
+    stream = open(yml_dir, 'r')
+    data = yaml.load(stream,Loader=yaml.BaseLoader)
+    std_target_train = float(data[dataset_name]['std'])
+    v_noise = float(data[dataset_name]['v_noise'])
+
+    #print('v_noise, dataset', v_noise, dataset_name)
+    #print(var[0], std_target_train, var[0] + (std_target_train**2)*v_noise)
+
+    # compute variance with v-noise
+    var = var + (std_target_train**2)*v_noise
+    #print('var being is 0: ', len(var[var==0]))
+    #print('var being below 0: ', len(var[var<0]))
+
+    #epsilon = 1e-6
+    #var[var==0] = epsilon # replace where the value is zero to small number(epsilon) to prevent the operation being devided by zero
+
     a = np.log(var)*0.5
     b = np.divide(np.square(label-mean), (2*(var)))
-    # b[b >= 100] = 100
+
     NLL = a + b
     # NLL = np.log(var)*0.5 + np.divide(np.square(label-mean), (2*(var)))
     # NLL[NLL <= -100] = -100

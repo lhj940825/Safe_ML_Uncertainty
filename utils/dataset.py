@@ -8,6 +8,7 @@ import os
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from utils.utils import *
 
 def data_to_torch_dataset(data, target):
     data = torch.tensor(data, dtype=torch.float)
@@ -22,7 +23,14 @@ class UCIDataset(Dataset):
         self.X = data[:, :-1]
         self.Y = data[:, -1]
         # #Keep the stat params for normalization.
-        self.stat = np.asarray([np.mean(self.Y, axis=0), np.std(self.Y, axis=0)])
+
+        mean = np.mean(self.Y, axis=0)
+        std =  np.std(self.Y, axis=0)
+        self.stat = np.asarray([mean,std])
+
+        _, dataset_name, data_file = data_path.split('\\') #data_path.split('\\')[1] = dataset name, data_path.split('\\')[2] = datafile to load, either train or eval, or test set
+        if ('train' in data_file):
+            store_train_mean_and_std(dataset_name,mean, std)
 
         # Computation of prior variance and noise from:
         # https://github.com/HIPS/Probabilistic-Backpropagation/blob/60ece68fe535b3b9d74cc71f996145e982872f2e/theano/PBP_net/prior.py

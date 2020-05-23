@@ -254,7 +254,28 @@ def get_train_or_test_figure_dir(output_dir, title):
     os.makedirs(figure_dir, exist_ok=True)
     return figure_dir
 
+def store_train_mean_and_std(dataset_name,mean: np.float64,std):
+    """
+    Store the computed mean and standard deviation on whole training set in yml file.
+    These mean and std will be used to compute the NLL as v-noise.
 
+
+    :param dataset_name: the name of training dataset that is used to compute mean and std
+    :param mean: computed mean of training dataset
+    :param std: computed std of training dataset
+    :return:
+    """
+    import yaml
+
+    yml_dir = os.path.join(os.getcwd(), 'configs\\mean_std.yml')
+    stream = open(yml_dir, 'r')
+    data = yaml.load(stream,Loader=yaml.BaseLoader)
+
+    data[dataset_name]['mean'] = mean.item()
+    data[dataset_name]['std'] = std.item()
+
+    with open(yml_dir, 'w') as f:
+        yaml.dump(data, f)
 
 """
 def plot_Mahalanobis_distance(sample_M_distance_list, gt_M_distance_list, output_dir, title="fig"):
