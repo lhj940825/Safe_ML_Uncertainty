@@ -62,7 +62,7 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
     gt_M_distance_list = []
     sample_M_distance_list = []
 
-    dataset_name = output_dir.split("\\")[1]
+    dataset_name = output_dir.split("/")[2]
 
     with torch.no_grad():
 
@@ -162,7 +162,7 @@ def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=N
     gt_M_distance_list = []
     sample_M_distance_list = []
 
-    dataset_name = output_dir.split("\\")[1]
+    dataset_name = output_dir.split("/")[2]
     with torch.no_grad():
 
         for cur_it, batch in enumerate(train_loader):
@@ -301,7 +301,7 @@ def evaluate_with_NLL(mean, var, label, dataset_name, v_noise=1):
 
 
     # load the std_target_train from mean_std.yaml file
-    yml_dir = os.path.join(os.getcwd(), 'configs\\mean_std.yml')
+    yml_dir = os.path.join(os.getcwd(), 'configs/mean_std.yml')
     stream = open(yml_dir, 'r')
     data = yaml.load(stream,Loader=yaml.BaseLoader)
     std_target_train = float(data[dataset_name]['std'])

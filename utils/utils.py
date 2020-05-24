@@ -267,7 +267,7 @@ def store_train_mean_and_std(dataset_name,mean: np.float64,std):
     """
     import yaml
 
-    yml_dir = os.path.join(os.getcwd(), 'configs\\mean_std.yml')
+    yml_dir = os.path.join(os.getcwd(), 'configs/mean_std.yml')
     stream = open(yml_dir, 'r')
     data = yaml.load(stream,Loader=yaml.BaseLoader)
 
