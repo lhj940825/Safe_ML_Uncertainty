@@ -204,7 +204,8 @@ def plot_Mahalanobis_distance_with_Chi2_PDF(sample_M_distance_list, output_dir, 
     plt.legend(loc='upper right')
     plt.xlabel('Squared Mahalanobis_distance')
     plt.ylabel('PDF(log scale)')
-    plt.xlim(0, max(sample_M_distance_list))
+    #plt.xlim(0, max(sample_M_distance_list))
+
     plt.title(title + ': Assessment of uncertainty realism with Chi PDF')
 
     # Logarithmic y-axis bins

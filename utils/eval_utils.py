@@ -62,7 +62,8 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
     gt_M_distance_list = []
     sample_M_distance_list = []
 
-    dataset_name = output_dir.split("/")[2]
+    #dataset_name = output_dir.split("/")[2]
+    dataset_name = output_dir.split("\\")[1]
 
     with torch.no_grad():
 
@@ -97,7 +98,8 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
             NLL = evaluate_with_NLL(mean, var, target.tolist(), dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
             RMSE = evaluate_with_RMSE(mean, target.tolist())
 
-            sample_M_distance, gt_M_distance =assess_uncertainty_realism(gt_label=target.tolist(),sample=model(input).tolist(), mean=mean, var=var)
+            sample = (stat[1]*model(input)+stat[0]).tolist()
+            sample_M_distance, gt_M_distance =assess_uncertainty_realism(gt_label=target.tolist(),sample=sample, mean=mean, var=var)
             sample_M_distance_list.extend(sample_M_distance)
             gt_M_distance_list.extend(gt_M_distance)
 
@@ -162,7 +164,8 @@ def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=N
     gt_M_distance_list = []
     sample_M_distance_list = []
 
-    dataset_name = output_dir.split("/")[2]
+    #dataset_name = output_dir.split("/")[2]
+    dataset_name = output_dir.split("\\")[1]
     with torch.no_grad():
 
         for cur_it, batch in enumerate(train_loader):
@@ -196,7 +199,8 @@ def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=N
             NLL = evaluate_with_NLL(mean, var, target.tolist(),dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
             RMSE = evaluate_with_RMSE(mean, target.tolist())
 
-            sample_M_distance, gt_M_distance =assess_uncertainty_realism(gt_label=target.tolist(),sample=model(input).tolist(), mean=mean, var=var)
+            sample = (stat[1]*model(input)+stat[0]).tolist()
+            sample_M_distance, gt_M_distance =assess_uncertainty_realism(gt_label=target.tolist(),sample=sample, mean=mean, var=var)
             sample_M_distance_list.extend(sample_M_distance)
             gt_M_distance_list.extend(gt_M_distance)
 
@@ -294,10 +298,11 @@ def compute_test_loss(model: nn.Module, test_set_dir, batch_size, num_worker, de
 
 def evaluate_with_NLL(mean, var, label, dataset_name, v_noise=1):
     import yaml
-    #TODO 1e-3: naval(0.027,0.1515), yacht(2.193789627	1.52338537)
-    # 1e-2: boston(2.469, 2.739), energy(1.67, 1.71), kin8nm(0.106, -0.06)
-    # 1e-1: wine(0.51, 1.49), power plant(5.50, 2.92)
-    # 1: powerplant(5.46, 2.91), concrete(6.29, 2.945), year(8.806,2.89)
+    #TODO chosen values for v_noise
+    # 1e-3: yacht(2.193789627	1.52338537)
+    # 1e-2: boston(2.469, 2.739), energy(1.67, 1.71)
+    # 1e-1: wine(0.51, 1.49), kin8nm(0.106, -0.06)
+    # 1: power plant(5.46, 2.91), concrete(6.29, 2.945), year(8.806,2.89), naval(0.027,0.1515), protein
 
 
     # load the std_target_train from mean_std.yaml file
@@ -311,7 +316,9 @@ def evaluate_with_NLL(mean, var, label, dataset_name, v_noise=1):
     #print(var[0], std_target_train, var[0] + (std_target_train**2)*v_noise)
 
     # compute variance with v-noise
+
     var = var + (std_target_train**2)*v_noise
+
     #print('var being is 0: ', len(var[var==0]))
     #print('var being below 0: ', len(var[var<0]))
 
