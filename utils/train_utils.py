@@ -61,11 +61,13 @@ class Trainer(object):
                 loss = self._train_it(batch)
 
                 # Log to tensorboard
-                self.tb_logger.add_scalar('Loss/train_loss', loss, self._it)
+                if self.tb_logger is not None:
+                    self.tb_logger.add_scalar('Loss/train_loss', loss, self._it)
                 running_loss += loss
                 self._it += 1
 
-            self.tb_logger.flush()
+            if self.tb_logger is not None:
+                self.tb_logger.flush()
 
             #save trained model
             trained_epoch = self._epoch + 1
