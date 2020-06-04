@@ -8,6 +8,7 @@ import utils.train_utils as tu
 from utils.dataset import *
 from utils.log_utils import create_tb_logger
 from utils.utils import *
+import matplotlib.pyplot as plt
 
 
 if __name__ == "__main__":
@@ -26,16 +27,14 @@ if __name__ == "__main__":
     output_dirs = {}
     output_dirs["boston"] = []
     output_dirs["wine"] = []
-    output_dirs["boston"] = []
-    output_dirs["wine"] = []
-    output_dirs["power_plant"] = []
-    output_dirs["concrete"] = []
-    output_dirs["energy"] = []
-    output_dirs["kin8nm"] = []
-    output_dirs["naval"] = []
-    output_dirs["yacht"] = []
-    output_dirs["protein"] = []
-    output_dirs["year"] = []
+    # output_dirs["power_plant"] = []
+    # output_dirs["concrete"] = []
+    # output_dirs["energy"] = []
+    # output_dirs["kin8nm"] = []
+    # output_dirs["naval"] = []
+    # output_dirs["yacht"] = []
+    # output_dirs["protein"] = []
+    # output_dirs["year"] = []
 
     for key, sub_dirs in output_dirs.items():
         for idx in range(cfg["num_networks"]):
@@ -121,14 +120,17 @@ if __name__ == "__main__":
     for key, model in models.items():
         print("*******************************Training {}*******************************\n".format(key))
         trainers[key] = []
+        fig, axes = plt.subplots(5, 2)
+        fig.suptitle("Loss figure {}".format(key))
+        fig.set_size_inches(20, 25)
+
         for idx, base_net in enumerate(model):
             trainers[key].append(Trainer(model=base_net,
                                          model_fn=model_fn,
                                          model_fn_eval=model_fn_eval,
                                          optimizer=optimizers[key][idx],
                                          ckpt_dir=ckpt_dirs[key][idx],
-                                         grad_norm_clip=cfg["grad_norm_clip"],))
-
+                                         grad_norm_clip=cfg["grad_norm_clip"]))
 
             trainers[key][idx].train(num_epochs=cfg["num_epochs"],
                                      train_loader=train_loaders[key],
@@ -140,8 +142,16 @@ if __name__ == "__main__":
 
         # draw_loss_trend_figure(key, len(trainers[key].train_loss), trainers[key].train_loss, trainers[key].eval_loss, output_dirs[key])
             draw_loss_trend_figure("Base_model{}_{}".format(idx, key), len(trainers[key][idx].train_loss), trainers[key][idx].train_loss, output_dir=output_dirs[key][idx])
+
+            #Draw a all-in-one figure
+            plot_loss(axes[idx // 2, idx % 2], "Base_model{}_{}".format(idx, key),
+                      len(trainers[key][idx].train_loss),
+                      trainers[key][idx].train_loss,
+                      output_dir=output_dirs[key][idx])
+
+        plt.savefig(os.path.join("./output", key, 'Loss_fig_all_in_one_{}.png'.format(key)))
+        plt.show()
         print("*******************************Finished training {}*******************************\n".format(key))
 
     #Finalizing
     print("Training finished\n")
-    #TODO: integrate logging, visualiztion, GPU data parallel etc in the future

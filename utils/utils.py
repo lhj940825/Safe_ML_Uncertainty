@@ -75,6 +75,27 @@ def draw_loss_trend_figure(title, epoch, train_loss_lost, test_loss_list=None, o
         plt.savefig(figure_dir)
     plt.show()
 
+def plot_loss(ax, title, epoch, train_loss_lost, test_loss_list=None, output_dir=None):
+    epochs_train = np.arange(0, epoch, 1)
+
+    ax.set_title(title)
+    ax.set_xlabel('epochs')
+    ax.set_ylabel('loss')
+    ax.plot(epochs_train, train_loss_lost, label = 'train loss')
+    if test_loss_list is not None:
+        epochs_test = np.arange(1, epoch + 1, 1)
+        plt.plot(epochs_test, test_loss_list, label= 'validation loss')
+    plt.legend(loc='best')
+
+    if output_dir is not None:
+        os.makedirs(output_dir, exist_ok=True)
+        figure_dir = os.path.join(output_dir, 'figures')
+        os.makedirs(figure_dir, exist_ok=True)
+
+        figure_dir = os.path.join(figure_dir, '{}_loss_fig.png'.format(title))
+        plt.savefig(figure_dir)
+    # plt.show()
+
 
 def plot_and_save_histograms(NLL_list, RMSE_list, output_dir, title="fig"):
     fig, axs = plt.subplots(1, 2, tight_layout=True)

@@ -39,7 +39,7 @@ def lr_scheduler():
     return 0.1
 
 class Trainer(object):
-    def __init__(self, model, model_fn, model_fn_eval, optimizer, ckpt_dir, grad_norm_clip=1.0, tb_logger=None):
+    def __init__(self, model, model_fn, model_fn_eval, optimizer, ckpt_dir, grad_norm_clip=1.0, tb_logger=None, output_dir=None):
         self.model = model
         self.model_fn = model_fn
         self.model_fn_eval = model_fn_eval
@@ -47,6 +47,7 @@ class Trainer(object):
         self.ckpt_dir = ckpt_dir
         self.grad_norm_clip = grad_norm_clip
         self.tb_logger = tb_logger
+        self.output_dir = output_dir
 
         self._epoch = 0
         self._it = 0

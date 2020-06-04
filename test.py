@@ -49,8 +49,7 @@ import numpy as np
 #
 # print()
 
-a = np.ones((4,4))
-b = np.array(range(1, 5))
-c = a * b
+import matplotlib.pyplot as plt
+ax = plt.subplot((1,2,1))
 
 print()
