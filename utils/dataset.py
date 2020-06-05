@@ -29,7 +29,8 @@ class UCIDataset(Dataset):
         self.stat = np.asarray([mean,std])
 
         a = data_path.split('/')
-        dataset_name, data_file = data_path.split('/')[-2:] #data_path.split('\\')[1] = dataset name, data_path.split('\\')[2] = datafile to load, either train or eval, or test set
+        #dataset_name, data_file = data_path.split('/')[-2:] #data_path.split('\\')[1] = dataset name, data_path.split('\\')[2] = datafile to load, either train or eval, or test set
+        dataset_name, data_file = data_path.split('\\')[-2:] #data_path.split('\\')[1] = dataset name, data_path.split('\\')[2] = datafile to load, either train or eval, or test set
         if ('train' in data_file):
             store_train_mean_and_std(dataset_name,mean, std)
 

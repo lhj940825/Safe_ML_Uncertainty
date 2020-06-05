@@ -13,6 +13,45 @@ from model import Wine_FC
 # const variable
 cap = 5
 
+def model_fn_for_pu(model: torch.nn.Module, batch):
+
+    #Move data to GPU
+    input = torch.from_numpy(batch["input"]).cuda(non_blocking=True).float()
+    target = torch.from_numpy(batch["target"]).cuda(non_blocking=True).float()
+    target = target.reshape(-1, 1)
+
+    pred = model(input)
+    mean = pred[:, 0]
+    std = pred[:, 1]
+    loss = model.loss_fn(target, mean, std)
+    
+    return loss
+
+def model_fn_eval_for_pu(model, eval_loader):
+    model.eval()
+    eval_loss = 0.0
+    for it, batch in enumerate(eval_loader):
+
+        # loss = model_fn(model, batch)
+
+        # input, target = batch
+        input = torch.from_numpy(batch["input"]).cuda(non_blocking=True).float()
+        target = torch.from_numpy(batch["target"]).cuda(non_blocking=True).float()
+        target = target.reshape(-1, 1)
+        stat = batch["stat"] # stat = [Y_mean, Y_std]
+        prior = batch["prior"]
+
+        pred = model(input)
+        # pred = stat[1] * pred + stat[0] # code for normalization new normalization
+
+        mean = pred[:, 0]
+        std = pred[:, 1]
+        loss = model.loss_fn(target, mean, std)
+
+        eval_loss += loss.item()
+    return eval_loss / len(eval_loader)
+
+
 def model_fn(model, batch):
     #unpack data
     # input, target = data
@@ -30,6 +69,7 @@ def model_fn(model, batch):
     loss = model.loss_fn(pred, target)
 
     return loss
+
 
 def model_fn_eval(model, eval_loader):
     model.eval()
@@ -213,6 +253,7 @@ def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=N
                 mean_list = mean
                 variance_list = var
                 gt_list = target.tolist()
+
             else:
                 NLL_list = np.append(NLL_list, np.squeeze(NLL))
                 RMSE_list = np.append(RMSE_list, np.squeeze(RMSE))
