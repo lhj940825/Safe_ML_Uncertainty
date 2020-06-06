@@ -27,7 +27,7 @@ class pu_fc(nn.Module):
 class pu_fc2(nn.Module):
 
     def __init__(self, input_dim):
-        super(pu_fc, self).__init__()
+        super(pu_fc2, self).__init__()
         self.input_dim = input_dim
 
         self.fc1 = nn.Linear(input_dim, 100)
