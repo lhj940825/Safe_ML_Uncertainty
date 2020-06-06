@@ -140,6 +140,37 @@ def plot_and_save_histograms(NLL_list, RMSE_list, output_dir, title="fig"):
     plt.savefig(figure_dir)
     plt.show()
 
+def plot_histograms(data, output_dir=None, title="fig"):
+    ax = plt.subplot()
+    num_bins = 60
+
+    # N is the count in each bin, bins is the lower-limit of the bin
+    N, bins, patches = ax.hist(data, bins=num_bins, weights=np.ones(len(data)) / len(data))
+    ax.yaxis.set_major_formatter(PercentFormatter(1))
+
+    ax.set_title(title + ': Target Norm Histogram')
+    ax.set_xlabel('Target norm')
+    # We'll color code by height, but you could use any scalar
+    fracs = N / N.max()
+
+    # we need to normalize the data to 0..1 for the full range of the colormap
+    norm = colors.Normalize(fracs.min(), fracs.max())
+
+    # Now, we'll loop through our objects and set the color of each accordingly
+    for thisfrac, thispatch in zip(fracs, patches):
+        color = plt.cm.viridis(norm(thisfrac))
+        thispatch.set_facecolor(color)
+
+    if output_dir is not None:
+        os.makedirs(output_dir, exist_ok=True)
+        figure_dir = os.path.join(output_dir, 'figures')
+        figure_dir = get_train_or_test_figure_dir(figure_dir, title)
+        os.makedirs(figure_dir, exist_ok=True)
+
+        figure_dir = os.path.join(figure_dir, title + 'target_norm_histogram.png')
+        plt.savefig(figure_dir)
+    plt.show()
+
 def plot_scatter(NLL_list, RMSE_list, output_dir, title="fig"):
     plt.scatter(NLL_list, RMSE_list)
     plt.title(title + ': NLL and RMSE Scatter')

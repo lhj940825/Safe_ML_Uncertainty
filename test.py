@@ -49,7 +49,7 @@ import numpy as np
 #
 # print()
 
-import matplotlib.pyplot as plt
-ax = plt.subplot((1,2,1))
 
-print()
+import random
+for i in range(10):
+    print(random.uniform(0.0, 1.0))

@@ -27,18 +27,20 @@ if __name__ == "__main__":
     output_dirs = {}
     output_dirs["boston"] = []
     output_dirs["wine"] = []
-    # output_dirs["power_plant"] = []
-    # output_dirs["concrete"] = []
-    # output_dirs["energy"] = []
-    # output_dirs["kin8nm"] = []
-    # output_dirs["naval"] = []
-    # output_dirs["yacht"] = []
-    # output_dirs["protein"] = []
-    # output_dirs["year"] = []
+    output_dirs["power_plant"] = []
+    output_dirs["concrete"] = []
+    output_dirs["energy"] = []
+    output_dirs["kin8nm"] = []
+    output_dirs["naval"] = []
+    output_dirs["yacht"] = []
+    output_dirs["protein"] = []
+    output_dirs["year"] = []
 
     for key, sub_dirs in output_dirs.items():
         for idx in range(cfg["num_networks"]):
-            sub_dirs.append(os.path.join('./output', key, 'model{}'.format(idx)))
+            sub_dir = os.path.join('./output_de', key, 'model{}'.format(idx))
+            os.makedirs(sub_dir, exist_ok=True)
+            sub_dirs.append(sub_dir)
 
     ckpt_dirs = {}
     for key, sub_dirs in output_dirs.items():
@@ -141,7 +143,7 @@ if __name__ == "__main__":
                                      starting_epoch=starting_epoch)
 
         # draw_loss_trend_figure(key, len(trainers[key].train_loss), trainers[key].train_loss, trainers[key].eval_loss, output_dirs[key])
-            draw_loss_trend_figure("Base_model{}_{}".format(idx, key), len(trainers[key][idx].train_loss), trainers[key][idx].train_loss, output_dir=output_dirs[key][idx])
+        #     draw_loss_trend_figure("Base_model{}_{}".format(idx, key), len(trainers[key][idx].train_loss), trainers[key][idx].train_loss, output_dir=output_dirs[key][idx])
 
             #Draw a all-in-one figure
             plot_loss(axes[idx // 2, idx % 2], "Base_model{}_{}".format(idx, key),
@@ -149,7 +151,7 @@ if __name__ == "__main__":
                       trainers[key][idx].train_loss,
                       output_dir=output_dirs[key][idx])
 
-        plt.savefig(os.path.join("./output", key, 'Loss_fig_all_in_one_{}.png'.format(key)))
+        plt.savefig(os.path.join("./output_de", key, 'Loss_fig_all_in_one_{}.png'.format(key)))
         plt.show()
         print("*******************************Finished training {}*******************************\n".format(key))
 

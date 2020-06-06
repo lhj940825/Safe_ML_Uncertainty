@@ -250,6 +250,107 @@ def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=N
     plot_Mahalanobis_distance_with_Chi2_PDF(sample_M_distance_list,output_dir=output_dir,title=title)
     return err_summary
 
+def eval_de(models, test_loader, cfg, output_dir, tb_logger=None, title=""):
+    NLL_list = None
+    RMSE_list = None
+    mean_list = None
+    variance_list = None
+    gt_list = None # to store all labels(ground truth)
+    gt_M_distance_list = []
+    sample_M_distance_list = []
+    norm_y = []
+
+    dataset_name = output_dir.split("/")[2]
+    # dataset_name = output_dir.split("\\")[1]
+
+    with torch.no_grad():
+
+        for cur_it, batch in enumerate(test_loader):
+            # input, target = batch
+            input = torch.from_numpy(batch["input"]).cuda(non_blocking=True).float()
+            target = torch.from_numpy(batch["target"]).cuda(non_blocking=True).float()
+            target = target.reshape(-1, 1)
+            stat = batch["stat"]
+
+            #TODO prior is no more used to compute v-noise
+            #prior = batch["prior"]
+            # stat = stat.cuda(non_blocking=True)[0] # code for normalization new normalization
+            #v_noise = prior[1] / (prior[0] - 1) * stat[1] ** 2
+
+            samples = None
+            for i in range(cfg["num_networks"]):  # By MC dropout, samples the network output several times(=num_networks) given the same input in order to compute the mean and variance for such given input
+                if samples is None:
+                    # samples = model(input).tolist()
+                    out = stat[1] * models[i](input) + stat[0] # code for de-normalization
+                    samples = out.tolist()
+                else:
+                    # model_output = model(input).tolist()
+                    # samples = np.append(samples, np.asarray(model_output), axis=1)
+                    out = stat[1] * models[i](input) + stat[0] # code for de-normalization
+                    out = out.tolist()
+                    samples = np.append(samples, np.asarray(out), axis=1)
+
+            mean, var = compute_mean_and_variance(samples, num_networks=cfg["num_networks"])
+            norm_y.append(((samples - mean) / np.sqrt(var)).reshape(-1))
+
+            NLL = evaluate_with_NLL(mean, var, target.tolist(), dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
+            RMSE = evaluate_with_RMSE(mean, target.tolist())
+
+            sample = (stat[1] * models[i](input) + stat[0]).tolist()
+            sample_M_distance, gt_M_distance = assess_uncertainty_realism(gt_label=target.tolist(),sample=sample, mean=mean, var=var)
+            sample_M_distance_list.extend(sample_M_distance)
+            gt_M_distance_list.extend(gt_M_distance)
+
+            #Log to tensorboard
+            # tb_logger.add_scalar('Loss/test_loss', np.average(NLL), cur_it)
+
+            if NLL_list is None:
+                NLL_list = NLL
+                RMSE_list = RMSE
+                mean_list = mean
+                variance_list = var
+                gt_list = target.tolist()
+            else:
+                NLL_list = np.append(NLL_list, np.squeeze(NLL))
+                RMSE_list = np.append(RMSE_list, np.squeeze(RMSE))
+                mean_list = np.append(mean_list, np.squeeze(mean))
+                variance_list = np.append(variance_list, np.squeeze(var))
+                gt_list = np.append(gt_list, np.squeeze(target.tolist()))
+
+            # tb_logger.flush()
+
+    norm_y = np.hstack(norm_y).reshape(-1)
+
+    print("NLL min/max: ", min(NLL_list), max(NLL_list))
+
+    print('NLL result mean:{}, standard deviation:{}'.format(np.mean(NLL_list), np.std(NLL_list)))
+    print('RMSE result mean:{}, standard deviation:{}'.format(np.mean(RMSE_list), np.std(RMSE_list)))
+
+    err_list = np.hstack([NLL_list.reshape(-1, 1), RMSE_list.reshape(-1, 1)])
+
+    err_summary = np.asarray([[np.mean(NLL_list), np.mean(RMSE_list)],
+                              [np.std(NLL_list), np.std(RMSE_list)],
+                              [len(NLL_list[NLL_list>cap]), cap]]) # add the information of current cap-value and number of NLL values beyond such cap
+
+
+    err_list = np.append(err_list, err_summary, axis=0)
+
+    np.savetxt(os.path.join(output_dir, title + "_error_list.csv"), err_list, delimiter=",")
+
+    # err_df = pd.DataFrame(err_list)
+    # err_df.columns = ['NLL', "RMSE"]
+    # err_df.append(pd.DataFrame(np.asarray([[np.mean(NLL_list), np.std(NLL_list)],
+    #                                        [np.mean(RMSE_list), np.std(RMSE_list)]])))
+    # err_df.to_csv(os.path.join(output_dir, title + "_error_list.csv"))
+
+    plot_and_save_histograms(NLL_list, RMSE_list, output_dir, title=title)
+    plot_histograms(norm_y, output_dir, title=title)
+    plot_scatter(NLL_list, RMSE_list, output_dir, title=title)
+    plot_scatter2(gt_list, mean_list, variance_list, output_dir, title)
+    plot_Mahalanobis_distance(sample_M_distance_list,gt_M_distance_list, output_dir=output_dir, title=title)
+    plot_Mahalanobis_distance_with_Chi2_PDF(sample_M_distance_list,output_dir=output_dir,title=title)
+    return err_summary
+
 def compute_test_loss(model: nn.Module, test_set_dir, batch_size, num_worker, device):
     """
     A function to compute the loss of model in training phase given the test dataset.
