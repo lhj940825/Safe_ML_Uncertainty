@@ -47,6 +47,7 @@ class custom_NLL():
         pass
 
     def __call__(self, label, mean: torch.autograd.Variable, std: torch.autograd.Variable):
+        std = torch.exp(std)
         var = torch.pow(std,2)
         NLL = torch.log(var)*0.5 + torch.div(torch.pow((label-mean),2), 2*var)
         NLL = torch.clamp(NLL, -100) # cap NLL values at -100
