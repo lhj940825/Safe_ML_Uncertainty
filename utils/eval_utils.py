@@ -212,8 +212,8 @@ def pu_eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
     #gt_M_distance_list = []
     #sample_M_distance_list = []
 
-    dataset_name = output_dir.split("/")[2]
-    # dataset_name = output_dir.split("\\")[1]
+    #dataset_name = output_dir.split("/")[2]
+    dataset_name = output_dir.split("\\")[1]
 
     with torch.no_grad():
 
@@ -513,8 +513,8 @@ def pu_eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logge
     #gt_M_distance_list = []
     #sample_M_distance_list = []
 
-    dataset_name = output_dir.split("/")[2]
-    # dataset_name = output_dir.split("\\")[1]
+    #dataset_name = output_dir.split("/")[2]
+    dataset_name = output_dir.split("\\")[1]
     with torch.no_grad():
 
         for cur_it, batch in enumerate(train_loader):

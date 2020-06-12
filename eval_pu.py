@@ -26,14 +26,14 @@ if __name__ == '__main__':
     output_dirs = {}
     output_dirs["boston"] = []
     output_dirs["wine"] =  []
-    # output_dirs["power_plant"] =  []
-    # output_dirs["concrete"] =  []
-    # output_dirs["energy"] = []
-    # output_dirs["kin8nm"] = []
-    # output_dirs["naval"] =  []
-    # output_dirs["yacht"] =  []
-    # output_dirs["protein"] =  []
-    # output_dirs["year"] =  []
+    output_dirs["power_plant"] =  []
+    output_dirs["concrete"] =  []
+    output_dirs["energy"] = []
+    output_dirs["kin8nm"] = []
+    #output_dirs["naval"] =  []
+    output_dirs["yacht"] =  []
+    #output_dirs["protein"] =  []
+    #output_dirs["year"] =  []
 
     for key, output_dir in output_dirs.items():
         output_dirs[key] = os.path.join('./output', key, 'parametric_uncertainty')
@@ -57,10 +57,10 @@ if __name__ == '__main__':
     test_loaders = {}
 
     for key, fname in data_files.items():
-        train_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[0]), testing=False)
+        train_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[0]), testing=True)
         train_loaders[key] = torch.utils.data.DataLoader(train_datasets[key], batch_size=cfg["batch_size"], num_workers=0, collate_fn = train_datasets[key].collate_batch)
 
-        test_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[2]), testing=False)
+        test_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[2]), testing=True)
         test_loaders[key] = torch.utils.data.DataLoader(test_datasets[key],
                                                    batch_size=cfg["batch_size"],
                                                    num_workers=0,
