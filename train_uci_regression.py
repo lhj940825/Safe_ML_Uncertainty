@@ -14,16 +14,16 @@ if __name__ == "__main__":
     #TODO: Simplifiy and automate the process
     #Create directory for storing results
     output_dirs = {}
-    output_dirs["boston"] = os.path.join("./", "output", "boston")
-    output_dirs["wine"] = os.path.join("./", "output", "wine")
-    output_dirs["power_plant"] = os.path.join("./", "output", "power_plant")
-    output_dirs["concrete"] = os.path.join("./", "output", "concrete")
-    output_dirs["energy"] = os.path.join("./", "output", "energy")
-    output_dirs["kin8nm"] = os.path.join("./", "output", "kin8nm")
-    output_dirs["naval"] = os.path.join("./", "output", "naval")
-    output_dirs["yacht"] = os.path.join("./", "output", "yacht")
-    output_dirs["protein"] = os.path.join("./", "output", "protein")
-    output_dirs["year"] = os.path.join("./", "output", "year")
+    # output_dirs["boston"] = os.path.join("./", "output_mc", "boston")
+    # output_dirs["wine"] = os.path.join("./", "output_mc", "wine")
+    # output_dirs["power_plant"] = os.path.join("./", "output_mc", "power_plant")
+    output_dirs["concrete"] = os.path.join("./", "output_mc", "concrete")
+    output_dirs["energy"] = os.path.join("./", "output_mc", "energy")
+    # output_dirs["kin8nm"] = os.path.join("./", "output_mc", "kin8nm")
+    # output_dirs["naval"] = os.path.join("./", "output_mc", "naval")
+    # output_dirs["yacht"] = os.path.join("./", "output_mc", "yacht")
+    # output_dirs["protein"] = os.path.join("./", "output_mc", "protein")
+    # output_dirs["year"] = os.path.join("./", "output_mc", "year")
 
     ckpt_dirs = {}
     for key, val in output_dirs.items():
@@ -49,16 +49,6 @@ if __name__ == "__main__":
     data_files = {}
     for key, _ in data_dirs.items():
         data_files[key] = ["{}_train.csv".format(key), "{}_eval.csv".format(key), "{}_test.csv".format(key)]
-    # data_files["boston"] = ["boston_train.csv", "boston_test.csv"]
-    # data_files["wine"] = ["wine_train.csv", "test_winequality-red.csv"]
-    # data_files["power_plant"] = ["pp_train.csv", "pp_test.csv"]
-    # data_files["concrete"] = ["concrete_train.csv", "concrete_test.csv"]
-    # data_files["energy"] = ["energy_train.csv", "energy_test.csv"]
-    # data_files["kin8nm"] = ["kin8nm_train.csv", "kin8nm_test.csv"]
-    # data_files["naval"] = ["naval_train.csv", "naval_test.csv"]
-    # data_files["yacht"] = ["yacht_train.csv", "yacht_test.csv"]
-    # data_files["protein"] = ["protein_train.csv", "protein_test.csv"]
-    # data_files["year"] = ["year_train.csv", "year_test.csv"]
 
     train_datasets = {}
     train_loaders = {}

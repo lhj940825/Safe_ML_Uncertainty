@@ -142,12 +142,12 @@ def plot_and_save_histograms(NLL_list, RMSE_list, output_dir, title="fig"):
 
 def plot_histograms(data, output_dir=None, title="fig"):
     ax = plt.subplot()
-    num_bins = 60
+    num_bins = 30
 
     # N is the count in each bin, bins is the lower-limit of the bin
     N, bins, patches = ax.hist(data, bins=num_bins, weights=np.ones(len(data)) / len(data))
-    ax.yaxis.set_major_formatter(PercentFormatter(1))
-
+    # ax.yaxis.set_major_formatter(PercentFormatter(1))
+    ax.set_yscale('log')
     ax.set_title(title + ': Target Norm Histogram')
     ax.set_xlabel('Target norm')
     # We'll color code by height, but you could use any scalar
@@ -256,7 +256,7 @@ def plot_Mahalanobis_distance_with_Chi2_PDF(sample_M_distance_list, output_dir, 
     plt.legend(loc='upper right')
     plt.xlabel('Squared Mahalanobis_distance')
     plt.ylabel('PDF(log scale)')
-    #plt.xlim(0, max(sample_M_distance_list))
+    plt.xlim(0, max(sample_M_distance_list))
 
     plt.title(title + ': Assessment of uncertainty realism with Chi PDF')
 

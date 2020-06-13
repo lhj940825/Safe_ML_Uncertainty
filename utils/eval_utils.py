@@ -102,8 +102,8 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
     gt_M_distance_list = []
     sample_M_distance_list = []
 
-    #dataset_name = output_dir.split("/")[2]
-    dataset_name = output_dir.split("\\")[1]
+    dataset_name = output_dir.split("/")[2]
+    # dataset_name = output_dir.split("\\")[1]
 
     with torch.no_grad():
 
@@ -305,8 +305,8 @@ def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=N
     gt_M_distance_list = []
     sample_M_distance_list = []
 
-    #dataset_name = output_dir.split("/")[2]
-    dataset_name = output_dir.split("\\")[1]
+    dataset_name = output_dir.split("/")[2]
+    # dataset_name = output_dir.split("\\")[1]
     with torch.no_grad():
 
         for cur_it, batch in enumerate(train_loader):
@@ -656,7 +656,7 @@ def evaluate_with_NLL(mean, var, label, dataset_name, v_noise=1):
     #print(var[0], std_target_train, var[0] + (std_target_train**2)*v_noise)
 
     # compute variance with v-noise
-
+    # v_noise = 0.0 # Switch off v-noise
     var = var + (std_target_train**2)*v_noise
 
     #print('var being is 0: ', len(var[var==0]))
