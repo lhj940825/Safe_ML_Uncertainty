@@ -22,8 +22,8 @@ def model_fn_for_pu(model: torch.nn.Module, batch):
 
     pred = model(input)
     mean = pred[:, 0]
-    std = pred[:, 1]
-    loss = model.loss_fn(target, mean, std)
+    output2 = pred[:, 1]
+    loss = model.loss_fn(target, mean, output2)
 
     return loss
 
@@ -230,9 +230,12 @@ def pu_eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
             #v_noise = prior[1] / (prior[0] - 1) * stat[1] ** 2
 
             out = model(input)
-            mean = out[:,0] #denormalization to compute the mean
+            mean = out[:,0]
+            mean = stat[1]*mean+stat[0] #denormalization to compute the mean
             mean = np.reshape(mean.cpu().data.numpy(),(-1,1))
-            std = torch.exp(out[:,1])
+
+            std = stat[1]*out[:,1] #denormalization to compute the std
+            std = torch.exp(std)
             var = np.reshape(torch.pow(std,2).cpu().data.numpy(), (-1,1))
 
             NLL = evaluate_with_NLL(mean, var, target.tolist(), dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
@@ -530,9 +533,12 @@ def pu_eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logge
             #v_noise = prior[1] / (prior[0] - 1) * stat[1] ** 2
 
             out = model(input)
-            mean = out[:,0] #denormalization to compute the mean
+            mean = out[:,0]
+            mean = stat[1]*mean+stat[0] #denormalization to compute the mean 
             mean = np.reshape(mean.cpu().data.numpy(),(-1,1))
-            std = torch.exp(out[:,1])
+
+            std = stat[1]*out[:,1] #denormalization to compute the std
+            std = torch.exp(std)
             var = np.reshape(torch.pow(std,2).cpu().data.numpy(), (-1,1))
 
             NLL = evaluate_with_NLL(mean, var, target.tolist(),dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
