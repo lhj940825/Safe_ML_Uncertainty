@@ -96,6 +96,7 @@ class Trainer(object):
 
         loss.backward()
         if self.grad_norm_clip:
+            print([param.weight.grad for param in self.model.parameters()])
             clip_grad_norm_(self.model.parameters(), self.grad_norm_clip)
         #print('before update',[param.data for param in self.model.parameters()])
         self.optimizer.step()

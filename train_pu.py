@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
     # some cfgs, some cfg will be used in the future
+    #torch.autograd.set_detect_anomaly(True)
 
     # TODO::put all kinds of cfgs and hyperparameter into a config file. e.g. yaml
     cfg = {}
@@ -38,7 +39,7 @@ if __name__ == "__main__":
     output_dirs["naval"] =  []
     output_dirs["yacht"] =  []
     output_dirs["protein"] =  []
-    output_dirs["year"] =  []
+    #output_dirs["year"] =  []
 
     for key, output_dir in output_dirs.items():
         output_dirs[key] = os.path.join('./output', key, 'parametric_uncertainty')
@@ -93,7 +94,7 @@ if __name__ == "__main__":
     print("Prepare training")
     optimizers = {}
     for key, model in models.items():
-        optimizers[key] = optim.Adam(model.parameters(), lr=tu.lr_scheduler())
+        optimizers[key] = optim.Adam(model.parameters(), lr=0.1)
 
     starting_iteration, starting_epoch = 0, 0
 
