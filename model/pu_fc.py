@@ -57,7 +57,7 @@ class custom_NLL():
         NLL = torch.log(var)*0.5 + torch.div(torch.pow((label-mean),2), 2*var)
         NLL = torch.clamp(NLL, -100) # cap NLL values at -100
         #print(np.shape(NLL))
-        NLL = torch.sum(NLL)
+        NLL = torch.mean(NLL) # average the computed NLL
 
         return NLL
 """

@@ -26,6 +26,7 @@ if __name__ == "__main__":
     cfg["batch_size"] = 100
     cfg["grad_norm_clip"] = None
     cfg["num_networks"] = 10
+    learning_rate = 0.001 # 0.001 makes every dataset trainable.
 
     #TODO: Simplifiy and automate the process
     #Create directory for storing results
@@ -94,7 +95,7 @@ if __name__ == "__main__":
     print("Prepare training")
     optimizers = {}
     for key, model in models.items():
-        optimizers[key] = optim.Adam(model.parameters(), lr=0.1)
+        optimizers[key] = optim.Adam(model.parameters(), lr=learning_rate)
 
     starting_iteration, starting_epoch = 0, 0
 
