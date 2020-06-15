@@ -461,7 +461,7 @@ def eval_de(models, test_loader, cfg, output_dir, tb_logger=None, title=""):
             mean, var = compute_mean_and_variance(samples, num_networks=cfg["num_networks"])
             norm_y.append(((samples - mean) / np.sqrt(var)).reshape(-1))
 
-            NLL = evaluate_with_NLL(mean, var, target.tolist(), dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
+            NLL, NLL_without_v_noise = evaluate_with_NLL(mean, var, target.tolist(), dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
             RMSE = evaluate_with_RMSE(mean, target.tolist())
 
             sample = (stat[1] * models[i](input) + stat[0]).tolist()
@@ -474,12 +474,14 @@ def eval_de(models, test_loader, cfg, output_dir, tb_logger=None, title=""):
 
             if NLL_list is None:
                 NLL_list = NLL
+                NLL_without_v_noise_list = NLL_without_v_noise
                 RMSE_list = RMSE
                 mean_list = mean
                 variance_list = var
                 gt_list = target.tolist()
             else:
                 NLL_list = np.append(NLL_list, np.squeeze(NLL))
+                NLL_without_v_noise_list = np.append(NLL_without_v_noise, np.squeeze(NLL_without_v_noise))
                 RMSE_list = np.append(RMSE_list, np.squeeze(RMSE))
                 mean_list = np.append(mean_list, np.squeeze(mean))
                 variance_list = np.append(variance_list, np.squeeze(var))
@@ -498,7 +500,9 @@ def eval_de(models, test_loader, cfg, output_dir, tb_logger=None, title=""):
 
     err_summary = np.asarray([[np.mean(NLL_list), np.mean(RMSE_list)],
                               [np.std(NLL_list), np.std(RMSE_list)],
-                              [len(NLL_list[NLL_list>cap]), cap]]) # add the information of current cap-value and number of NLL values beyond such cap
+                              [len(NLL_list[NLL_list > cap]), cap],
+                              # add the information of current cap-value and number of NLL values beyond such cap
+                              [np.mean(NLL_without_v_noise_list), np.std(NLL_without_v_noise_list)]])
 
 
     err_list = np.append(err_list, err_summary, axis=0)
