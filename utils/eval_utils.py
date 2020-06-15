@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 from utils.utils import *
 from model import Wine_FC
 # from utils.dataset import WineDataset
+from sys import platform
 
 # const variable
 cap = 5
@@ -22,8 +23,8 @@ def model_fn_for_pu(model: torch.nn.Module, batch):
 
     pred = model(input)
     mean = pred[:, 0]
-    std = pred[:, 1]
-    loss = model.loss_fn(target, mean, std)
+    output2 = pred[:, 1]
+    loss = model.loss_fn(target, mean, output2)
 
     return loss
 
@@ -95,6 +96,7 @@ def model_fn_eval(model, eval_loader):
 
 def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
     NLL_list = None
+    NLL_without_v_noise_list = None
     RMSE_list = None
     mean_list = None
     variance_list = None
@@ -102,8 +104,11 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
     gt_M_distance_list = []
     sample_M_distance_list = []
 
-    dataset_name = output_dir.split("/")[2]
-    # dataset_name = output_dir.split("\\")[1]
+
+    if platform == 'win32':
+        dataset_name = output_dir.split("\\")[1]
+    else:
+        dataset_name = output_dir.split("/")[2]
 
     with torch.no_grad():
 
@@ -135,7 +140,7 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
             mean, var = compute_mean_and_variance(samples, num_networks=cfg["num_networks"])
             # mean = stat[1] * mean + stat[0]
 
-            NLL = evaluate_with_NLL(mean, var, target.tolist(), dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
+            NLL, NLL_without_v_noise = evaluate_with_NLL(mean, var, target.tolist(), dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
             RMSE = evaluate_with_RMSE(mean, target.tolist())
 
             sample = (stat[1]*model(input)+stat[0]).tolist()
@@ -148,12 +153,14 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
 
             if NLL_list is None:
                 NLL_list = NLL
+                NLL_without_v_noise_list = NLL_without_v_noise
                 RMSE_list = RMSE
                 mean_list = mean
                 variance_list = var
                 gt_list = target.tolist()
             else:
                 NLL_list = np.append(NLL_list, np.squeeze(NLL))
+                NLL_without_v_noise_list = np.append(NLL_without_v_noise, np.squeeze(NLL_without_v_noise))
                 RMSE_list = np.append(RMSE_list, np.squeeze(RMSE))
                 mean_list = np.append(mean_list, np.squeeze(mean))
                 variance_list = np.append(variance_list, np.squeeze(var))
@@ -170,8 +177,8 @@ def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
 
     err_summary = np.asarray([[np.mean(NLL_list), np.mean(RMSE_list)],
                               [np.std(NLL_list), np.std(RMSE_list)],
-                              [len(NLL_list[NLL_list>cap]), cap]]) # add the information of current cap-value and number of NLL values beyond such cap
-
+                              [len(NLL_list[NLL_list>cap]), cap], # add the information of current cap-value and number of NLL values beyond such cap
+                              [np.mean(NLL_without_v_noise_list), np.std(NLL_without_v_noise_list)]])
 
     err_list = np.append(err_list, err_summary, axis=0)
 
@@ -205,6 +212,7 @@ def pu_eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
     """
 
     NLL_list = None
+    NLL_without_v_noise_list = None
     RMSE_list = None
     mean_list = None
     variance_list = None
@@ -212,8 +220,10 @@ def pu_eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
     #gt_M_distance_list = []
     #sample_M_distance_list = []
 
-    dataset_name = output_dir.split("/")[2]
-    # dataset_name = output_dir.split("\\")[1]
+    if platform == 'win32':
+        dataset_name = output_dir.split("\\")[1]
+    else:
+        dataset_name = output_dir.split("/")[2]
 
     with torch.no_grad():
 
@@ -230,12 +240,15 @@ def pu_eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
             #v_noise = prior[1] / (prior[0] - 1) * stat[1] ** 2
 
             out = model(input)
-            mean = out[:,0] #denormalization to compute the mean
+            mean = out[:,0]
+            mean = stat[1]*mean+stat[0] #denormalization to compute the mean
             mean = np.reshape(mean.cpu().data.numpy(),(-1,1))
-            std = torch.exp(out[:,1])
+
+            std = stat[1]*out[:,1] #denormalization to compute the std
+            std = torch.exp(std)
             var = np.reshape(torch.pow(std,2).cpu().data.numpy(), (-1,1))
 
-            NLL = evaluate_with_NLL(mean, var, target.tolist(), dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
+            NLL, NLL_without_v_noise  = evaluate_with_NLL(mean, var, target.tolist(), dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
             RMSE = evaluate_with_RMSE(mean, target.tolist())
 
             #sample = (stat[1]*model(input)+stat[0]).tolist()
@@ -248,12 +261,14 @@ def pu_eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
 
             if NLL_list is None:
                 NLL_list = NLL
+                NLL_without_v_noise_list = NLL_without_v_noise
                 RMSE_list = RMSE
                 mean_list = mean
                 variance_list = var
                 gt_list = target.tolist()
             else:
                 NLL_list = np.append(NLL_list, np.squeeze(NLL))
+                NLL_without_v_noise_list = np.append(NLL_without_v_noise, np.squeeze(NLL_without_v_noise))
                 RMSE_list = np.append(RMSE_list, np.squeeze(RMSE))
                 mean_list = np.append(mean_list, np.squeeze(mean))
                 variance_list = np.append(variance_list, np.squeeze(var))
@@ -270,7 +285,8 @@ def pu_eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
 
     err_summary = np.asarray([[np.mean(NLL_list), np.mean(RMSE_list)],
                               [np.std(NLL_list), np.std(RMSE_list)],
-                              [len(NLL_list[NLL_list>cap]), cap]]) # add the information of current cap-value and number of NLL values beyond such cap
+                              [len(NLL_list[NLL_list>cap]), cap], # add the information of current cap-value and number of NLL values beyond such cap
+                              [np.mean(NLL_without_v_noise_list), np.std(NLL_without_v_noise_list)]])
 
 
     err_list = np.append(err_list, err_summary, axis=0)
@@ -298,6 +314,7 @@ def eval_batch(model, data):
 
 def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=None, title=""):
     NLL_list = None
+    NLL_without_v_noise_list = None
     RMSE_list = None
     mean_list = None
     variance_list = None
@@ -305,8 +322,11 @@ def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=N
     gt_M_distance_list = []
     sample_M_distance_list = []
 
-    dataset_name = output_dir.split("/")[2]
-    # dataset_name = output_dir.split("\\")[1]
+    if platform=='win32':
+        dataset_name = output_dir.split("\\")[1]
+    else:
+        dataset_name = output_dir.split("/")[2]
+
     with torch.no_grad():
 
         for cur_it, batch in enumerate(train_loader):
@@ -337,7 +357,7 @@ def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=N
             mean, var = compute_mean_and_variance(samples, num_networks=cfg["num_networks"])
             # mean = stat[1] * mean + stat[0]
 
-            NLL = evaluate_with_NLL(mean, var, target.tolist(),dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
+            NLL, NLL_without_v_noise  = evaluate_with_NLL(mean, var, target.tolist(),dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
             RMSE = evaluate_with_RMSE(mean, target.tolist())
 
             sample = (stat[1]*model(input)+stat[0]).tolist()
@@ -350,13 +370,14 @@ def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=N
 
             if NLL_list is None:
                 NLL_list = NLL
+                NLL_without_v_noise_list = NLL_without_v_noise
                 RMSE_list = RMSE
                 mean_list = mean
                 variance_list = var
                 gt_list = target.tolist()
-
             else:
                 NLL_list = np.append(NLL_list, np.squeeze(NLL))
+                NLL_without_v_noise_list = np.append(NLL_without_v_noise, np.squeeze(NLL_without_v_noise))
                 RMSE_list = np.append(RMSE_list, np.squeeze(RMSE))
                 mean_list = np.append(mean_list, np.squeeze(mean))
                 variance_list = np.append(variance_list, np.squeeze(var))
@@ -402,8 +423,12 @@ def eval_de(models, test_loader, cfg, output_dir, tb_logger=None, title=""):
     sample_M_distance_list = []
     norm_y = []
 
-    dataset_name = output_dir.split("/")[2]
-    # dataset_name = output_dir.split("\\")[1]
+
+
+    if platform == 'win32':
+        dataset_name = output_dir.split("\\")[1]
+    else:
+        dataset_name = output_dir.split("/")[2]
 
     with torch.no_grad():
 
@@ -435,7 +460,7 @@ def eval_de(models, test_loader, cfg, output_dir, tb_logger=None, title=""):
             mean, var = compute_mean_and_variance(samples, num_networks=cfg["num_networks"])
             norm_y.append(((samples - mean) / np.sqrt(var)).reshape(-1))
 
-            NLL = evaluate_with_NLL(mean, var, target.tolist(), dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
+            NLL, NLL_without_v_noise = evaluate_with_NLL(mean, var, target.tolist(), dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
             RMSE = evaluate_with_RMSE(mean, target.tolist())
 
             sample = (stat[1] * models[i](input) + stat[0]).tolist()
@@ -448,12 +473,14 @@ def eval_de(models, test_loader, cfg, output_dir, tb_logger=None, title=""):
 
             if NLL_list is None:
                 NLL_list = NLL
+                NLL_without_v_noise_list = NLL_without_v_noise
                 RMSE_list = RMSE
                 mean_list = mean
                 variance_list = var
                 gt_list = target.tolist()
             else:
                 NLL_list = np.append(NLL_list, np.squeeze(NLL))
+                NLL_without_v_noise_list = np.append(NLL_without_v_noise, np.squeeze(NLL_without_v_noise))
                 RMSE_list = np.append(RMSE_list, np.squeeze(RMSE))
                 mean_list = np.append(mean_list, np.squeeze(mean))
                 variance_list = np.append(variance_list, np.squeeze(var))
@@ -472,7 +499,9 @@ def eval_de(models, test_loader, cfg, output_dir, tb_logger=None, title=""):
 
     err_summary = np.asarray([[np.mean(NLL_list), np.mean(RMSE_list)],
                               [np.std(NLL_list), np.std(RMSE_list)],
-                              [len(NLL_list[NLL_list>cap]), cap]]) # add the information of current cap-value and number of NLL values beyond such cap
+                              [len(NLL_list[NLL_list > cap]), cap],
+                              # add the information of current cap-value and number of NLL values beyond such cap
+                              [np.mean(NLL_without_v_noise_list), np.std(NLL_without_v_noise_list)]])
 
 
     err_list = np.append(err_list, err_summary, axis=0)
@@ -506,6 +535,7 @@ def pu_eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logge
     :return:
     """
     NLL_list = None
+    NLL_without_v_noise_list = None
     RMSE_list = None
     mean_list = None
     variance_list = None
@@ -513,8 +543,11 @@ def pu_eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logge
     #gt_M_distance_list = []
     #sample_M_distance_list = []
 
-    dataset_name = output_dir.split("/")[2]
-    # dataset_name = output_dir.split("\\")[1]
+    if platform == 'win32':
+        dataset_name = output_dir.split("\\")[1]
+    else:
+        dataset_name = output_dir.split("/")[2]
+
     with torch.no_grad():
 
         for cur_it, batch in enumerate(train_loader):
@@ -530,12 +563,15 @@ def pu_eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logge
             #v_noise = prior[1] / (prior[0] - 1) * stat[1] ** 2
 
             out = model(input)
-            mean = out[:,0] #denormalization to compute the mean
+            mean = out[:,0]
+            mean = stat[1]*mean+stat[0] #denormalization to compute the mean
             mean = np.reshape(mean.cpu().data.numpy(),(-1,1))
-            std = torch.exp(out[:,1])
+
+            std = stat[1]*out[:,1] #denormalization to compute the std
+            std = torch.exp(std)
             var = np.reshape(torch.pow(std,2).cpu().data.numpy(), (-1,1))
 
-            NLL = evaluate_with_NLL(mean, var, target.tolist(),dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
+            NLL, NLL_without_v_noise  = evaluate_with_NLL(mean, var, target.tolist(),dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
             RMSE = evaluate_with_RMSE(mean, target.tolist())
 
             #sample = (stat[1]*model(input)+stat[0]).tolist()
@@ -545,9 +581,9 @@ def pu_eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logge
 
             #Log to tensorboard
             #tb_logger.add_scalar('Loss/test_loss', np.average(NLL), cur_it)
-
             if NLL_list is None:
                 NLL_list = NLL
+                NLL_without_v_noise_list = NLL_without_v_noise
                 RMSE_list = RMSE
                 mean_list = mean
                 variance_list = var
@@ -555,6 +591,7 @@ def pu_eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logge
 
             else:
                 NLL_list = np.append(NLL_list, np.squeeze(NLL))
+                NLL_without_v_noise_list = np.append(NLL_without_v_noise, np.squeeze(NLL_without_v_noise))
                 RMSE_list = np.append(RMSE_list, np.squeeze(RMSE))
                 mean_list = np.append(mean_list, np.squeeze(mean))
                 variance_list = np.append(variance_list, np.squeeze(var))
@@ -644,7 +681,6 @@ def evaluate_with_NLL(mean, var, label, dataset_name, v_noise=1):
     # 1e-1: wine(0.51, 1.49), kin8nm(0.106, -0.06)
     # 1: power plant(5.46, 2.91), concrete(6.29, 2.945), year(8.806,2.89), naval(0.027,0.1515), protein
 
-
     # load the std_target_train from mean_std.yaml file
     yml_dir = os.path.join(os.getcwd(), 'configs/mean_std.yml')
     stream = open(yml_dir, 'r')
@@ -652,32 +688,22 @@ def evaluate_with_NLL(mean, var, label, dataset_name, v_noise=1):
     std_target_train = float(data[dataset_name]['std'])
     v_noise = float(data[dataset_name]['v_noise'])
 
-    #print('v_noise, dataset', v_noise, dataset_name)
-    #print(var[0], std_target_train, var[0] + (std_target_train**2)*v_noise)
+    # compute NLL without applying v-noise
+    var_without_v_noise = np.copy(var)
+    var_without_v_noise[var_without_v_noise <=0] = 1e-6 #hadnling variance of 0
+    NLL_without_v_noise = np.log(var_without_v_noise)*0.5 + np.divide(np.square(label-mean), (2*(var_without_v_noise)))
 
     # compute variance with v-noise
-    # v_noise = 0.0 # Switch off v-noise
     var = var + (std_target_train**2)*v_noise
-
-    #print('var being is 0: ', len(var[var==0]))
-    #print('var being below 0: ', len(var[var<0]))
-
-    #epsilon = 1e-6
-    #var[var==0] = epsilon # replace where the value is zero to small number(epsilon) to prevent the operation being devided by zero
 
     a = np.log(var)*0.5
     b = np.divide(np.square(label-mean), (2*(var)))
 
+    # compute NLL with v_noise
     NLL = a + b
-    # NLL = np.log(var)*0.5 + np.divide(np.square(label-mean), (2*(var)))
-    # NLL[NLL <= -100] = -100
 
-    # a = -0.5 * np.log(2 * np.pi * var)
-    # b = - 0.5 * (label - mean) ** 2 / var
-    # b[b <= -100] = -100
-    # NLL = a + b
+    return NLL, NLL_without_v_noise
 
-    return NLL
 
 def compute_mean_and_variance(samples, num_networks):
     """

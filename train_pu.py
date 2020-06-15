@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
     # some cfgs, some cfg will be used in the future
+    #torch.autograd.set_detect_anomaly(True)
 
     # TODO::put all kinds of cfgs and hyperparameter into a config file. e.g. yaml
     cfg = {}
@@ -25,23 +26,25 @@ if __name__ == "__main__":
     cfg["batch_size"] = 100
     cfg["grad_norm_clip"] = None
     cfg["num_networks"] = 10
+    learning_rate = 0.001 # 0.001 makes every dataset trainable.
 
     #TODO: Simplifiy and automate the process
     #Create directory for storing results
     output_dirs = {}
+
     output_dirs["boston"] = []
     output_dirs["wine"] =  []
-    # output_dirs["power_plant"] =  []
-    # output_dirs["concrete"] =  []
-    # output_dirs["energy"] = []
-    # output_dirs["kin8nm"] = []
-    # output_dirs["naval"] =  []
-    # output_dirs["yacht"] =  []
+    output_dirs["power_plant"] =  []
+    output_dirs["concrete"] =  []
+    output_dirs["energy"] = []
+    output_dirs["kin8nm"] = []
+    output_dirs["naval"] =  []
+    output_dirs["yacht"] =  []
     # output_dirs["protein"] =  []
-    #output_dirs["year"] =  []
+    # output_dirs["year"] =  []
 
     for key, output_dir in output_dirs.items():
-        output_dirs[key] = os.path.join('./output', key, 'parametric_uncertainty')
+        output_dirs[key] = os.path.join('./output_pu', key, 'parametric_uncertainty')
 
     ckpt_dirs = {}
     for key, output_dir in output_dirs.items():
@@ -63,13 +66,13 @@ if __name__ == "__main__":
 
     print("Prepare training data")
     for key, fname in data_files.items():
-        train_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[0]),testing=False)
+        train_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[0]))
         train_loaders[key] = torch.utils.data.DataLoader(train_datasets[key],
                                                          batch_size=cfg["batch_size"],
                                                          num_workers=0,
                                                          collate_fn=train_datasets[key].collate_batch)
 
-        eval_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[1]), testing=False)
+        eval_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[1]), testing=True)
         eval_loaders[key] = torch.utils.data.DataLoader(eval_datasets[key],
                                                         batch_size=cfg["batch_size"],
                                                         num_workers=0,
@@ -93,7 +96,7 @@ if __name__ == "__main__":
     print("Prepare training")
     optimizers = {}
     for key, model in models.items():
-        optimizers[key] = optim.Adam(model.parameters(), lr=tu.lr_scheduler())
+        optimizers[key] = optim.Adam(model.parameters(), lr=learning_rate)
 
     starting_iteration, starting_epoch = 0, 0
 

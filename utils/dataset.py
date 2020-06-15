@@ -9,6 +9,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from utils.utils import *
+from sys import platform
 
 def data_to_torch_dataset(data, target):
     data = torch.tensor(data, dtype=torch.float)
@@ -28,9 +29,12 @@ class UCIDataset(Dataset):
         std =  np.std(self.Y, axis=0)
         self.stat = np.asarray([mean,std])
 
-        a = data_path.split('/')
-        dataset_name, data_file = data_path.split('/')[-2:] #data_path.split('\\')[1] = dataset name, data_path.split('\\')[2] = datafile to load, either train or eval, or test set
-        # dataset_name, data_file = data_path.split('\\')[-2:] #data_path.split('\\')[1] = dataset name, data_path.split('\\')[2] = datafile to load, either train or eval, or test set
+        #a = data_path.split('/')
+
+        if platform == 'win32':
+            dataset_name, data_file = data_path.split('\\')[-2:] #data_path.split('\\')[1] = dataset name, data_path.split('\\')[2] = datafile to load, either train or eval, or test set
+        else:
+            dataset_name, data_file = data_path.split('/')[-2:] #data_path.split('\\')[1] = dataset name, data_path.split('\\')[2] = datafile to load, either train or eval, or test set
         if ('train' in data_file):
             store_train_mean_and_std(dataset_name,mean, std)
 

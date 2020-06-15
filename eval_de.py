@@ -25,11 +25,12 @@ if __name__ == "__main__":
     #TODO: Simplifiy and automate the process
     #Create directory for storing results
     output_dirs = {}
-    # output_dirs["boston"] = []
-    # output_dirs["wine"] = []
+
+    output_dirs["boston"] = []
+    output_dirs["wine"] = []
     # output_dirs["power_plant"] = []
-    output_dirs["concrete"] = []
-    output_dirs["energy"] = []
+    # output_dirs["concrete"] = []
+    # output_dirs["energy"] = []
     # output_dirs["kin8nm"] = []
     # output_dirs["naval"] = []
     # output_dirs["yacht"] = []
@@ -129,6 +130,7 @@ if __name__ == "__main__":
 
     dataset_list = []
     NLL_list = []
+    NLL_without_v_Noise_list = []
     RMSE_list = []
     NLL_over_cap_cnt = []
     cap = 0
@@ -139,12 +141,14 @@ if __name__ == "__main__":
         RMSE_list.append(val[0][1])
         NLL_over_cap_cnt.append(val[2][0])
         cap = val[2][1]
+        NLL_without_v_Noise_list.append(val[3][0])
 
-    err_df = pd.DataFrame(index=range(len(dataset_list)), columns=["Datasets", "RMSE", "NLL"])
+    err_df = pd.DataFrame(index=range(len(dataset_list)), columns=["Datasets", "RMSE", "NLL", "NLL_no_v_noise"])
     # a = pd.DataFrame(dataset_list)
     err_df["Datasets"] = pd.DataFrame(dataset_list)
     err_df["RMSE"] = pd.DataFrame(RMSE_list)
     err_df["NLL"] = pd.DataFrame(NLL_list)
+    err_df["NLL_no_v_noise"] = pd.DataFrame(NLL_without_v_Noise_list)
 
     err_sum_dir = "./output_de/err_summary"
     os.makedirs(err_sum_dir, exist_ok=True)

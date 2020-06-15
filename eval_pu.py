@@ -26,17 +26,17 @@ if __name__ == '__main__':
     output_dirs = {}
     output_dirs["boston"] = []
     output_dirs["wine"] =  []
-    # output_dirs["power_plant"] =  []
-    # output_dirs["concrete"] =  []
-    # output_dirs["energy"] = []
-    # output_dirs["kin8nm"] = []
-    # output_dirs["naval"] =  []
-    # output_dirs["yacht"] =  []
+    output_dirs["power_plant"] =  []
+    output_dirs["concrete"] =  []
+    output_dirs["energy"] = []
+    output_dirs["kin8nm"] = []
+    output_dirs["naval"] =  []
+    output_dirs["yacht"] =  []
     # output_dirs["protein"] =  []
     # output_dirs["year"] =  []
 
     for key, output_dir in output_dirs.items():
-        output_dirs[key] = os.path.join('./output', key, 'parametric_uncertainty')
+        output_dirs[key] = os.path.join('./output_pu', key, 'parametric_uncertainty')
 
     ckpt_dirs = {}
     for key, output_dir in output_dirs.items():
@@ -57,10 +57,10 @@ if __name__ == '__main__':
     test_loaders = {}
 
     for key, fname in data_files.items():
-        train_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[0]), testing=False)
+        train_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[0]), testing=True)
         train_loaders[key] = torch.utils.data.DataLoader(train_datasets[key], batch_size=cfg["batch_size"], num_workers=0, collate_fn = train_datasets[key].collate_batch)
 
-        test_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[2]), testing=False)
+        test_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[2]), testing=True)
         test_loaders[key] = torch.utils.data.DataLoader(test_datasets[key],
                                                    batch_size=cfg["batch_size"],
                                                    num_workers=0,
@@ -117,6 +117,7 @@ if __name__ == '__main__':
 
     dataset_list = []
     NLL_list = []
+    NLL_without_v_Noise_list = []
     RMSE_list = []
     NLL_over_cap_cnt = []
     cap = 0
@@ -127,14 +128,17 @@ if __name__ == '__main__':
         RMSE_list.append(val[0][1])
         NLL_over_cap_cnt.append(val[2][0])
         cap = val[2][1]
+        NLL_without_v_Noise_list.append(val[3][0])
 
-    err_df = pd.DataFrame(index=range(len(dataset_list)), columns=["Datasets", "RMSE", "NLL"])
+    err_df = pd.DataFrame(index=range(len(dataset_list)), columns=["Datasets", "RMSE", "NLL", "NLL_no_v_noise"])
     # a = pd.DataFrame(dataset_list)
     err_df["Datasets"] = pd.DataFrame(dataset_list)
     err_df["RMSE"] = pd.DataFrame(RMSE_list)
     err_df["NLL"] = pd.DataFrame(NLL_list)
+    err_df["NLL_no_v_noise"] = pd.DataFrame(NLL_without_v_Noise_list)
 
-    err_sum_dir = "./output/err_summary"
+
+    err_sum_dir = "./output_pu/err_summary"
     os.makedirs(err_sum_dir, exist_ok=True)
     err_df.to_csv(os.path.join(err_sum_dir, "pu_err_summary.csv"))
 

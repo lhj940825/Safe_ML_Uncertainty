@@ -8,14 +8,14 @@ if __name__ == "__main__":
     #TODO: Simplifiy and automate the process
     #Create directory for storing results
     output_dirs = {}
-    # output_dirs["boston"] = os.path.join("./", "output_mc", "boston")
-    # output_dirs["wine"] = os.path.join("./", "output_mc", "wine")
-    # output_dirs["power_plant"] = os.path.join("./", "output_mc", "power_plant")
+    output_dirs["boston"] = os.path.join("./", "output_mc", "boston")
+    output_dirs["wine"] = os.path.join("./", "output_mc", "wine")
+    output_dirs["power_plant"] = os.path.join("./", "output_mc", "power_plant")
     output_dirs["concrete"] = os.path.join("./", "output_mc", "concrete")
     output_dirs["energy"] = os.path.join("./", "output_mc", "energy")
-    # output_dirs["kin8nm"] = os.path.join("./", "output_mc", "kin8nm")
-    # output_dirs["naval"] = os.path.join("./", "output_mc", "naval")
-    # output_dirs["yacht"] = os.path.join("./", "output_mc", "yacht")
+    output_dirs["kin8nm"] = os.path.join("./", "output_mc", "kin8nm")
+    output_dirs["naval"] = os.path.join("./", "output_mc", "naval")
+    output_dirs["yacht"] = os.path.join("./", "output_mc", "yacht")
     # output_dirs["protein"] = os.path.join("./", "output_mc", "protein")
     # output_dirs["year"] = os.path.join("./", "output_mc", "year")
 
@@ -107,6 +107,7 @@ if __name__ == "__main__":
 
     dataset_list = []
     NLL_list = []
+    NLL_without_v_Noise_list = []
     RMSE_list = []
     NLL_over_cap_cnt = []
     cap = 0
@@ -117,14 +118,16 @@ if __name__ == "__main__":
         RMSE_list.append(val[0][1])
         NLL_over_cap_cnt.append(val[2][0])
         cap = val[2][1]
+        NLL_without_v_Noise_list.append(val[3][0])
 
-    err_df = pd.DataFrame(index=range(len(dataset_list)), columns=["Datasets", "RMSE", "NLL"])
+    err_df = pd.DataFrame(index=range(len(dataset_list)), columns=["Datasets", "RMSE", "NLL", "NLL_no_v_noise"])
     # a = pd.DataFrame(dataset_list)
     err_df["Datasets"] = pd.DataFrame(dataset_list)
     err_df["RMSE"] = pd.DataFrame(RMSE_list)
     err_df["NLL"] = pd.DataFrame(NLL_list)
+    err_df["NLL_no_v_noise"] = pd.DataFrame(NLL_without_v_Noise_list)
 
-    err_sum_dir = "./output/err_summary"
+    err_sum_dir = "./output_mc/err_summary"
     os.makedirs(err_sum_dir, exist_ok=True)
     err_df.to_csv(os.path.join(err_sum_dir, "err_summary.csv"))
 
