@@ -24,16 +24,16 @@ if __name__ == '__main__':
     #TODO: Simplifiy and automate the process
     #Create directory for storing results
     output_dirs = {}
-    output_dirs["boston"] = []
-    output_dirs["wine"] =  []
-    output_dirs["power_plant"] =  []
-    output_dirs["concrete"] =  []
-    output_dirs["energy"] = []
-    output_dirs["kin8nm"] = []
-    output_dirs["naval"] =  []
-    output_dirs["yacht"] =  []
-    # output_dirs["protein"] =  []
-    # output_dirs["year"] =  []
+    #output_dirs["boston"] = []
+    #output_dirs["wine"] =  []
+    #output_dirs["power_plant"] =  []
+    #output_dirs["concrete"] =  []
+    #output_dirs["energy"] = []
+    #output_dirs["kin8nm"] = []
+    #output_dirs["naval"] =  []
+    #output_dirs["yacht"] =  []
+    #output_dirs["protein"] =  []
+    output_dirs["year"] =  []
 
     for key, output_dir in output_dirs.items():
         output_dirs[key] = os.path.join('./output_pu', key, 'parametric_uncertainty')

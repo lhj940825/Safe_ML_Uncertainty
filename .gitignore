@@ -25,5 +25,8 @@ output/
 results/
 result_*/
 wandb/
+output_de/
+output_pu/
+output_mc/
 
 slurm_logs
