@@ -311,11 +311,13 @@ def plot_sequence_mean_var(seq_mean, seq_var, output_dir='./tmp_videos', title='
     os.makedirs(output_dir, exist_ok=True)
     path = os.path.join(output_dir, title + '.avi')
     writer = cv2.VideoWriter(path, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (w, h))
-    
-    max_mean = np.max(seq_mean)
-    max_var = np.max(seq_var)
-    min_mean = np.min(seq_mean)
-    min_var = np.min(seq_var)
+
+    inf = 1e10
+
+    max_mean = min(inf, np.max(seq_mean))
+    max_var = min(inf, np.max(seq_var))
+    min_mean = max(-inf, np.min(seq_mean))
+    min_var = max(-inf, np.min(seq_var))
 
     for epoch, (mean, var) in enumerate(zip(seq_mean, seq_var)):
         ax.cla()

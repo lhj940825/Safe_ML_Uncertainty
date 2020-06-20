@@ -49,10 +49,14 @@ import numpy as np
 #
 # print()
 
+#
+# t = torch.tensor([])
+# a = torch.tensor([[1,2]])
+# b = torch.tensor([[3,4]])
+# c = torch.cat((a, b))
+# d = torch.cat((a,b), dim=1)
+# print(t)
 
-t = torch.tensor([])
-a = torch.tensor([[1,2]])
-b = torch.tensor([[3,4]])
-c = torch.cat((a, b))
-d = torch.cat((a,b), dim=1)
-print(t)
+a = torch.autograd.Variable(torch.rand(1,1), requires_grad=True)
+b = torch.randn((1,1), dtype=torch.float, requires_grad=True)
+print(a)
