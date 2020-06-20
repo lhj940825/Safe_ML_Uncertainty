@@ -576,6 +576,7 @@ def pu_eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logge
             # stat = stat.cuda(non_blocking=True)[0] # code for normalization new normalization
             #v_noise = prior[1] / (prior[0] - 1) * stat[1] ** 2
 
+            model.eval()
             out = model(input)
             mean = out[:,0]
             mean = stat[1]*mean+stat[0] #denormalization to compute the mean
@@ -640,6 +641,55 @@ def pu_eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logge
     #plot_Mahalanobis_distance(sample_M_distance_list,gt_M_distance_list, output_dir=output_dir, title=title)
     #plot_Mahalanobis_distance_with_Chi2_PDF(sample_M_distance_list,output_dir=output_dir,title=title)
     return err_summary
+
+def pu_eval_residualError_and_std_with_particular_epoch(model, train_loader, output_dir, title=""):
+
+    mean_list = None
+    variance_list = None
+    gt_list = None # to store all labels(ground truth)
+
+    if platform == 'win32':
+        dataset_name = output_dir.split("\\")[1]
+    else:
+        dataset_name = output_dir.split("/")[2]
+
+    with torch.no_grad():
+        for cur_it, batch in enumerate(train_loader):
+            # input, target = batch
+            input = torch.from_numpy(batch["input"]).cuda(non_blocking=True).float()
+            target = torch.from_numpy(batch["target"]).cuda(non_blocking=True).float()
+            target = target.reshape(-1, 1)
+            stat = batch["stat"]
+
+            #TODO prior is no more used to compute v-noise
+            #prior = batch["prior"]
+            # stat = stat.cuda(non_blocking=True)[0] # code for normalization new normalization
+            #v_noise = prior[1] / (prior[0] - 1) * stat[1] ** 2
+
+            model.eval()
+            out = model(input)
+            mean = out[:,0]
+            mean = stat[1]*mean+stat[0] #denormalization to compute the mean
+            mean = np.reshape(mean.cpu().data.numpy(),(-1,1))
+
+            std = stat[1]*out[:,1] #denormalization to compute the std
+            std = torch.exp(std)
+            var = np.reshape(torch.pow(std,2).cpu().data.numpy(), (-1,1))
+
+            if mean_list is None:
+                mean_list = mean
+                variance_list = var
+                gt_list = target.tolist()
+
+            else:
+                mean_list = np.append(mean_list, np.squeeze(mean))
+                variance_list = np.append(variance_list, np.squeeze(var))
+                gt_list = np.append(gt_list, np.squeeze(target.tolist()))
+
+    #plot_scatter2(gt_list, mean_list, variance_list, output_dir, title)
+    every_10_epochs_plot_scateer2(gt_list, mean_list, variance_list, output_dir, title)
+
+
 
 def compute_test_loss(model: nn.Module, test_set_dir, batch_size, num_worker, device):
     """

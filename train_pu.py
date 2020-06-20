@@ -22,7 +22,7 @@ if __name__ == "__main__":
     cfg = {}
     cfg["ckpt"] = None
     cfg["num_epochs"] = 150
-    cfg["ckpt_save_interval"] = 20
+    cfg["ckpt_save_interval"] = 10
     cfg["batch_size"] = 100
     cfg["grad_norm_clip"] = None
     cfg["num_networks"] = 10
@@ -34,14 +34,14 @@ if __name__ == "__main__":
 
     output_dirs["boston"] = []
     output_dirs["wine"] =  []
-    # output_dirs["power_plant"] =  []
-    # output_dirs["concrete"] =  []
-    # output_dirs["energy"] = []
-    # output_dirs["kin8nm"] = []
-    # output_dirs["naval"] =  []
-    # output_dirs["yacht"] =  []
-    # output_dirs["protein"] =  []
-    # output_dirs["year"] =  []
+    output_dirs["power_plant"] =  []
+    output_dirs["concrete"] =  []
+    output_dirs["energy"] = []
+    output_dirs["kin8nm"] = []
+    #output_dirs["naval"] =  []
+    output_dirs["yacht"] =  []
+    output_dirs["protein"] =  []
+    #output_dirs["year"] =  []
 
     for key, output_dir in output_dirs.items():
         output_dirs[key] = os.path.join('./output_pu', key, 'parametric_uncertainty')

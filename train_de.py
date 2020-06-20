@@ -10,7 +10,6 @@ from utils.log_utils import create_tb_logger
 from utils.utils import *
 import matplotlib.pyplot as plt
 
-
 if __name__ == "__main__":
     # some cfgs, some cfg will be used in the future
     # TODO::put all kinds of cfgs and hyperparameter into a config file. e.g. yaml

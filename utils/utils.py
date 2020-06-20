@@ -217,6 +217,34 @@ def plot_scatter2(ground_truth, mean, var, output_dir, title):
     plt.savefig(figure_dir)
     plt.show()
 
+def every_10_epochs_plot_scateer2(ground_truth, mean, var, output_dir, title):
+    """
+
+    :param ground_truth:
+    :param mean:
+    :param var:
+    :param output_dir:
+    :param title:
+    :return:
+    """
+
+    plt.scatter(ground_truth-mean, np.sqrt(var))
+    plt.title(title+ ': GT-mean and std ')
+    plt.xlabel('Ground Truth - mean')
+    plt.ylabel('std')
+
+    os.makedirs(output_dir, exist_ok=True)
+    figure_dir = os.path.join(output_dir, 'figures')
+    figure_dir = get_train_or_test_figure_dir(figure_dir, title)
+    os.makedirs(figure_dir, exist_ok=True)
+    figure_dir = os.path.join(figure_dir, 'GT-mean_and_std_for_each_epoch')
+    os.makedirs(figure_dir, exist_ok=True)
+
+    figure_dir = os.path.join(figure_dir, title + '_GT-mean_and_std.png')
+    plt.savefig(figure_dir)
+    plt.show()
+
+
 
 
 def plot_Mahalanobis_distance(sample_M_distance_list, gt_M_distance_list, output_dir, title="fig"):
@@ -365,6 +393,7 @@ def store_train_mean_and_std(dataset_name,mean: np.float64,std):
 
     with open(yml_dir, 'w') as f:
         yaml.dump(data, f)
+
 
 """
 def plot_Mahalanobis_distance(sample_M_distance_list, gt_M_distance_list, output_dir, title="fig"):

@@ -9,7 +9,6 @@ from utils.dataset import *
 from utils.log_utils import create_tb_logger
 from utils.utils import *
 
-
 if __name__ == "__main__":
     #TODO: Simplifiy and automate the process
     #Create directory for storing results

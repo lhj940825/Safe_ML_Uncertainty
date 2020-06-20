@@ -4,6 +4,9 @@ from torch.nn.utils import clip_grad_norm_
 import yaml
 from utils.utils import draw_loss_trend_figure, plot_sequence_mean_var
 import numpy as np
+from utils.eval_utils import pu_eval_with_training_dataset
+from utils.utils import draw_loss_trend_figure
+
 
 def checkpoint_state(model=None, optimizer=None, epoch=None, it=None):
     optim_state = optimizer.state_dict() if optimizer is not None else None
@@ -60,6 +63,10 @@ class Trainer(object):
         if eval_loader is not None:
             seq_mean, seq_var = [], []
 
+        # save the initial model
+        ckpt_name = os.path.join(self.ckpt_dir, "ckpt_e{}".format(0))
+        save_checkpoint(checkpoint_state(self.model, self.optimizer, 0, self._it), filename=ckpt_name)
+
         for self._epoch in range(num_epochs):
             running_loss = 0.0
             all_pred = torch.tensor([])
@@ -82,10 +89,14 @@ class Trainer(object):
             self.train_loss.append(running_loss / len(train_loader))
             print("Epoch loss: ", self.train_loss[self._epoch])
 
+
             if trained_epoch % ckpt_save_interval == 0:
                 print("Saving checkpoint")
                 ckpt_name = os.path.join(self.ckpt_dir, "ckpt_e{}".format(trained_epoch))
                 save_checkpoint(checkpoint_state(self.model, self.optimizer, trained_epoch, self._it), filename=ckpt_name)
+
+#            if self.epoch % 10 ==0:
+#                pu_eval_with_training_dataset(model= self.model, train_loader=train_loader,cfg=None, output_dir=None, tb_logger=None, title= )
 
             # eval one epoch
             if eval_loader is not None:
