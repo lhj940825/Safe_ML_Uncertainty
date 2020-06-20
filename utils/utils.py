@@ -207,6 +207,7 @@ def plot_scatter2(ground_truth, mean, var, output_dir, title):
     plt.title(title+ ': GT-mean and std ')
     plt.xlabel('Ground Truth - mean')
     plt.ylabel('std')
+    
 
     os.makedirs(output_dir, exist_ok=True)
     figure_dir = os.path.join(output_dir, 'figures')
