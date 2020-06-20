@@ -24,7 +24,7 @@ def model_fn_for_pu(model: torch.nn.Module, batch):
     pred = model(input)
     mean = pred[:, 0]
     output2 = pred[:, 1]
-    # output = output2 + model.bias
+    #output2 = output2 + model.bias
     loss = model.loss_fn(target, mean, output2)
 
     # print("weights:")
@@ -693,7 +693,7 @@ def pu_eval_residualError_and_std_with_particular_epoch(model, train_loader, out
                 gt_list = np.append(gt_list, np.squeeze(target.tolist()))
 
     #plot_scatter2(gt_list, mean_list, variance_list, output_dir, title)
-    every_10_epochs_plot_scateer2(gt_list, mean_list, variance_list, output_dir, title)
+    every_10_epochs_plot_scatter2(gt_list, mean_list, variance_list, output_dir, title)
 
 
 
@@ -760,7 +760,7 @@ def evaluate_with_NLL(mean, var, label, dataset_name, v_noise=1):
 
     # compute NLL without applying v-noise
     var_without_v_noise = np.copy(var)
-    var_without_v_noise[var_without_v_noise <=0] = 1e-6 #hadnling variance of 0
+    var_without_v_noise[var_without_v_noise ==0] = 1e-6 #hadnling variance of 0
     NLL_without_v_noise = np.log(var_without_v_noise)*0.5 + np.divide(np.square(label-mean), (2*(var_without_v_noise)))
 
     # compute variance with v-noise

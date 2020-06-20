@@ -20,19 +20,20 @@ if __name__ == '__main__':
     cfg["batch_size"] = 100
     cfg["grad_norm_clip"] = None
     cfg["num_networks"] = 10
+    cfg["eval_epoch"] = 150
 
     #TODO: Simplifiy and automate the process
     #Create directory for storing results
     output_dirs = {}
     output_dirs["boston"] = []
     output_dirs["wine"] =  []
-    output_dirs["power_plant"] =  []
-    output_dirs["concrete"] =  []
-    output_dirs["energy"] = []
-    output_dirs["kin8nm"] = []
+    #output_dirs["power_plant"] =  []
+    #output_dirs["concrete"] =  []
+    #output_dirs["energy"] = []
+    #output_dirs["kin8nm"] = []
     #output_dirs["naval"] =  []
-    output_dirs["yacht"] =  []
-    output_dirs["protein"] =  []
+    #output_dirs["yacht"] =  []
+    #output_dirs["protein"] =  []
     #output_dirs["year"] =  []
 
     for key, output_dir in output_dirs.items():
@@ -93,9 +94,9 @@ if __name__ == '__main__':
     for key, ckpt_dir in ckpt_dirs.items():
         # cur_ckpts[key] = '{}.pth'.format(os.path.join(ckpt_dir, "ckpt_e{}".format(trainers[key]._epoch + 1)))
         # print("loading checkpoint ckpt_e{}".format(trainers[key]._epoch + 1))
-        cur_ckpts[key] = '{}.pth'.format(os.path.join(ckpt_dir, "ckpt_e{}".format(40)))
-        print("loading checkpoint ckpt_e{}".format(40))
-        models[key].load_state_dict(torch.load(cur_ckpts[key])["model_state"])
+        cur_ckpts[key] = '{}.pth'.format(os.path.join(ckpt_dir, "ckpt_e{}".format(cfg["eval_epoch"])))
+        print("loading checkpoint ckpt_e{}".format(cfg["eval_epoch"]))
+        models[key].load_state_dict(torch.load(cur_ckpts[key])["model_state"], strict=False)
 
         # Unlike MCDropout, we set the models evaluate mode here.
         models[key].eval()
@@ -114,12 +115,12 @@ if __name__ == '__main__':
 
 
 
-    # plot
+    # plot the gt-mean and std figures for every 10 epochs to see the training process of PU model
     ckpt_idxs = np.linspace(start=0, stop=cfg["num_epochs"], num=(cfg["num_epochs"]//10 +1), dtype=int) # ckpt_idxs = [0,10,20,...,150]
     for key, model in models.items():
         for idx in ckpt_idxs:
             cur_ckpt =  '{}.pth'.format(os.path.join(ckpt_dirs[key], "ckpt_e{}".format(idx)))
-            model.load_state_dict(torch.load(cur_ckpt)["model_state"])
+            model.load_state_dict(torch.load(cur_ckpt)["model_state"], strict=False)
             pu_eval_residualError_and_std_with_particular_epoch(model= model,train_loader=train_loaders[key], output_dir=output_dirs[key],title='train-'+key+'-epoch='+str(idx))
 
 
