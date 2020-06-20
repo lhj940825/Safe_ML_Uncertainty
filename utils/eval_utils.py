@@ -24,8 +24,13 @@ def model_fn_for_pu(model: torch.nn.Module, batch):
     pred = model(input)
     mean = pred[:, 0]
     output2 = pred[:, 1]
-    output = output2 + model.bias
+    # output = output2 + model.bias
     loss = model.loss_fn(target, mean, output2)
+
+    # print("weights:")
+    #
+    # for weight in model.parameters():
+    #     print(weight.data)
 
     return loss
 

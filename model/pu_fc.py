@@ -18,12 +18,15 @@ class pu_fc(nn.Module):
         self.loss_fn = custom_NLL()
 
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.bias = torch.autograd.Variable(torch.rand(1,1), requires_grad=True).to(device)
+        # self.bias = torch.autograd.Variable(torch.rand(1,1), requires_grad=True).to(device)
+        self.bias = nn.Parameter(torch.rand(1, 1))
 
     def forward(self, x):
         out = self.fc1(x)
         out = F.relu(out, inplace=True)
         out = self.fc2(out)
+        out[..., 1] = out[..., 1] + self.bias
+        # print('bias: ', self.bias)
 
         return out
 
@@ -38,12 +41,14 @@ class pu_fc2(nn.Module):
         self.loss_fn = custom_NLL()
 
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.bias = torch.autograd.Variable(torch.rand(1,1), requires_grad=True).to(device)
+        # self.bias = torch.autograd.Variable(torch.rand(1,1), requires_grad=True).to(device)
+        self.bias = nn.Parameter(torch.rand(1, 1))
 
     def forward(self, x):
         out = self.fc1(x)
         out = F.relu(out, inplace=True)
         out = self.fc2(out)
+        out[..., 1] = out[..., 1] + self.bias
 
         return out
 
