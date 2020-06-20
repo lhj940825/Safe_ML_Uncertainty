@@ -3,6 +3,7 @@
 **/__pycache__
 *_ext*
 *.bag
+*.zip
 
 *.cu.o
 *.DS_Store
