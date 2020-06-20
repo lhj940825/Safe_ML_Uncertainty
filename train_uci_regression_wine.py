@@ -68,6 +68,7 @@ def train(train_set_dir, num_epochs, ckpt_save_interval, ckpt_dir, batch_size, l
             input, label = batch
 
             # preprocessing inputs and labels in order to prevent some runtime error( i.e tensor dim or datatype not matching)
+
             input = input.to(device)
             input = input.float()
             label = label.to(device)

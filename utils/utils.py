@@ -217,7 +217,7 @@ def plot_scatter2(ground_truth, mean, var, output_dir, title):
     plt.savefig(figure_dir)
     plt.show()
 
-def every_10_epochs_plot_scateer2(ground_truth, mean, var, output_dir, title):
+def every_10_epochs_plot_scatter2(ground_truth, mean, var, output_dir, title):
     """
 
     :param ground_truth:

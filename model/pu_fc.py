@@ -17,6 +17,9 @@ class pu_fc(nn.Module):
         self.fc2 = nn.Linear(50, 2) # one unit for predicting mean and the other for standard deviation
         self.loss_fn = custom_NLL()
 
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.bias = torch.autograd.Variable(torch.rand(1,1), requires_grad=True).to(device)
+
     def forward(self, x):
         out = self.fc1(x)
         out = F.relu(out, inplace=True)
@@ -34,6 +37,9 @@ class pu_fc2(nn.Module):
         self.fc2 = nn.Linear(100, 2) # one unit for predicting mean and the other for standard deviation
         self.loss_fn = custom_NLL()
 
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.bias = torch.autograd.Variable(torch.rand(1,1), requires_grad=True).to(device)
+
     def forward(self, x):
         out = self.fc1(x)
         out = F.relu(out, inplace=True)
@@ -47,15 +53,13 @@ class custom_NLL():
         pass
 
     def __call__(self, label, mean: torch.autograd.Variable, output2: torch.autograd.Variable):
-        import sys
 
+
+        #output2 = output2 + bias
         label = label.view(-1)
         std = torch.exp(output2)
-        #print('std',np.shape(std))
         var = torch.pow(std,2)
-        #print('var',np.shape(var))
-        #print('label',np.shape(label))
-        #print('mean',np.shape(mean))
+
         NLL = torch.log(var)*0.5 + torch.div(torch.pow((label-mean),2), 2*var)
         NLL = torch.clamp(NLL, min = -100) # cap NLL values at -100
         #print(np.shape(NLL))
