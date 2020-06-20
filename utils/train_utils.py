@@ -95,9 +95,6 @@ class Trainer(object):
                 ckpt_name = os.path.join(self.ckpt_dir, "ckpt_e{}".format(trained_epoch))
                 save_checkpoint(checkpoint_state(self.model, self.optimizer, trained_epoch, self._it), filename=ckpt_name)
 
-#            if self.epoch % 10 ==0:
-#                pu_eval_with_training_dataset(model= self.model, train_loader=train_loader,cfg=None, output_dir=None, tb_logger=None, title= )
-
             # eval one epoch
             if eval_loader is not None:
                 with torch.set_grad_enabled(False):

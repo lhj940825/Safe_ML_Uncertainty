@@ -33,14 +33,14 @@ if __name__ == "__main__":
     output_dirs = {}
 
     output_dirs["boston"] = []
-    output_dirs["wine"] =  []
-    output_dirs["power_plant"] =  []
-    output_dirs["concrete"] =  []
-    output_dirs["energy"] = []
-    output_dirs["kin8nm"] = []
+    #output_dirs["wine"] =  []
+    #output_dirs["power_plant"] =  []
+    #output_dirs["concrete"] =  []
+    #output_dirs["energy"] = []
+    #output_dirs["kin8nm"] = []
     #output_dirs["naval"] =  []
-    output_dirs["yacht"] =  []
-    output_dirs["protein"] =  []
+    #output_dirs["yacht"] =  []
+    #output_dirs["protein"] =  []
     #output_dirs["year"] =  []
 
     for key, output_dir in output_dirs.items():

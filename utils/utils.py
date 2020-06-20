@@ -207,7 +207,7 @@ def plot_scatter2(ground_truth, mean, var, output_dir, title):
     plt.title(title+ ': GT-mean and std ')
     plt.xlabel('Ground Truth - mean')
     plt.ylabel('std')
-    
+
 
     os.makedirs(output_dir, exist_ok=True)
     figure_dir = os.path.join(output_dir, 'figures')
@@ -229,10 +229,18 @@ def every_10_epochs_plot_scatter2(ground_truth, mean, var, output_dir, title):
     :return:
     """
 
-    plt.scatter(ground_truth-mean, np.sqrt(var))
+    std = np.sqrt(var)
+    gt_sub_mean = ground_truth-mean
+    plt.scatter(gt_sub_mean, std)
     plt.title(title+ ': GT-mean and std ')
     plt.xlabel('Ground Truth - mean')
     plt.ylabel('std')
+    #plt.ylim(0,5)
+
+    x = np.linspace(0, np.max(gt_sub_mean), 100)
+    plt.plot(x, x,'r-', lw=5, alpha=0.6, label='y=x')
+    plt.plot(-x, x,'r-', lw=5, alpha=0.6)
+    plt.legend()
 
     os.makedirs(output_dir, exist_ok=True)
     figure_dir = os.path.join(output_dir, 'figures')
@@ -245,6 +253,29 @@ def every_10_epochs_plot_scatter2(ground_truth, mean, var, output_dir, title):
     plt.savefig(figure_dir)
     plt.show()
 
+    
+    #TODO codes below: do the same as above, but this time save the same figure with y-axis range [0,3]
+    plt.scatter(gt_sub_mean, std)
+    plt.title(title+ ': GT-mean and std ')
+    plt.xlabel('Ground Truth - mean')
+    plt.ylabel('std')
+    #plt.ylim(0,5)
+
+    x = np.linspace(0, np.max(gt_sub_mean), 100)
+    plt.plot(x, x,'r-', lw=5, alpha=0.6, label='y=x')
+    plt.plot(-x, x,'r-', lw=5, alpha=0.6)
+    plt.legend()
+    plt.ylim(ymin=0, ymax=3)
+
+    figure_dir = os.path.join(output_dir, 'figures')
+    figure_dir = get_train_or_test_figure_dir(figure_dir, title)
+    os.makedirs(figure_dir, exist_ok=True)
+    figure_dir = os.path.join(figure_dir, 'GT-mean_and_std_for_each_epoch_with_y_lim')
+    os.makedirs(figure_dir, exist_ok=True)
+
+    figure_dir = os.path.join(figure_dir, title + '_GT-mean_and_std.png')
+    plt.savefig(figure_dir)
+    plt.show()
 
 
 
