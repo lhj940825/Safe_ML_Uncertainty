@@ -15,7 +15,7 @@ if __name__ == '__main__':
     # TODO::put all kinds of cfgs and hyperparameter into a config file. e.g. yaml
     cfg = {}
     cfg["ckpt"] = None
-    cfg["num_epochs"] = 40
+    cfg["num_epochs"] = 150
     cfg["ckpt_save_interval"] = 20
     cfg["batch_size"] = 100
     cfg["grad_norm_clip"] = None
@@ -24,16 +24,16 @@ if __name__ == '__main__':
     #TODO: Simplifiy and automate the process
     #Create directory for storing results
     output_dirs = {}
-    #output_dirs["boston"] = []
-    #output_dirs["wine"] =  []
-    #output_dirs["power_plant"] =  []
-    #output_dirs["concrete"] =  []
-    #output_dirs["energy"] = []
-    #output_dirs["kin8nm"] = []
+    output_dirs["boston"] = []
+    output_dirs["wine"] =  []
+    output_dirs["power_plant"] =  []
+    output_dirs["concrete"] =  []
+    output_dirs["energy"] = []
+    output_dirs["kin8nm"] = []
     #output_dirs["naval"] =  []
-    #output_dirs["yacht"] =  []
-    #output_dirs["protein"] =  []
-    output_dirs["year"] =  []
+    output_dirs["yacht"] =  []
+    output_dirs["protein"] =  []
+    #output_dirs["year"] =  []
 
     for key, output_dir in output_dirs.items():
         output_dirs[key] = os.path.join('./output_pu', key, 'parametric_uncertainty')
@@ -113,6 +113,17 @@ if __name__ == '__main__':
         #TODO below function is to generate figures for training dataset as requested by Joachim
         pu_eval_with_training_dataset(model, train_loaders[key], cfg=cfg, output_dir=output_dirs[key], tb_logger=tb_loggers[key], title='train-'+key)
         print("Finished\n")
+
+
+
+    # plot
+    ckpt_idxs = np.linspace(start=0, stop=cfg["num_epochs"], num=(cfg["num_epochs"]//10 +1), dtype=int) # ckpt_idxs = [0,10,20,...,150]
+    for key, model in models.items():
+        for idx in ckpt_idxs:
+            cur_ckpt =  '{}.pth'.format(os.path.join(ckpt_dirs[key], "ckpt_e{}".format(idx)))
+            model.load_state_dict(torch.load(cur_ckpt)["model_state"])
+            pu_eval_residualError_and_std_with_particular_epoch(model= model,train_loader=train_loaders[key], output_dir=output_dirs[key],title='train-'+key+'-epoch='+str(idx))
+
 
 
     dataset_list = []
