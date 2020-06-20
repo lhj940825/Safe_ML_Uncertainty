@@ -34,8 +34,8 @@ if __name__ == "__main__":
     output_dirs["kin8nm"] = []
     output_dirs["naval"] = []
     output_dirs["yacht"] = []
-    # output_dirs["protein"] = []
-    # output_dirs["year"] = []
+    output_dirs["protein"] = []
+    output_dirs["year"] = []
 
     for key, sub_dirs in output_dirs.items():
         for idx in range(cfg["num_networks"]):

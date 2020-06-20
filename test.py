@@ -50,6 +50,9 @@ import numpy as np
 # print()
 
 
-import random
-for i in range(10):
-    print(random.uniform(0.0, 1.0))
+t = torch.tensor([])
+a = torch.tensor([[1,2]])
+b = torch.tensor([[3,4]])
+c = torch.cat((a, b))
+d = torch.cat((a,b), dim=1)
+print(t)

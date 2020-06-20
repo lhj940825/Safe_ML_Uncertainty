@@ -21,7 +21,7 @@ if __name__ == "__main__":
     # TODO::put all kinds of cfgs and hyperparameter into a config file. e.g. yaml
     cfg = {}
     cfg["ckpt"] = None
-    cfg["num_epochs"] = 40
+    cfg["num_epochs"] = 150
     cfg["ckpt_save_interval"] = 20
     cfg["batch_size"] = 100
     cfg["grad_norm_clip"] = None
@@ -34,12 +34,12 @@ if __name__ == "__main__":
 
     output_dirs["boston"] = []
     output_dirs["wine"] =  []
-    output_dirs["power_plant"] =  []
-    output_dirs["concrete"] =  []
-    output_dirs["energy"] = []
-    output_dirs["kin8nm"] = []
-    output_dirs["naval"] =  []
-    output_dirs["yacht"] =  []
+    # output_dirs["power_plant"] =  []
+    # output_dirs["concrete"] =  []
+    # output_dirs["energy"] = []
+    # output_dirs["kin8nm"] = []
+    # output_dirs["naval"] =  []
+    # output_dirs["yacht"] =  []
     # output_dirs["protein"] =  []
     # output_dirs["year"] =  []
 
@@ -72,7 +72,7 @@ if __name__ == "__main__":
                                                          num_workers=0,
                                                          collate_fn=train_datasets[key].collate_batch)
 
-        eval_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[1]), testing=True)
+        eval_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[0]), testing=True)
         eval_loaders[key] = torch.utils.data.DataLoader(eval_datasets[key],
                                                         batch_size=cfg["batch_size"],
                                                         num_workers=0,
@@ -118,14 +118,16 @@ if __name__ == "__main__":
                                 model_fn_eval=model_fn_eval,
                                 optimizer=optimizers[key],
                                 ckpt_dir=ckpt_dirs[key],
+                                output_dir=output_dirs[key],
+                                title='pu_train_{}'.format(key),
                                 grad_norm_clip=cfg["grad_norm_clip"],
                                 tb_logger=tb_loggers[key])
 
 
         trainers[key].train(num_epochs=cfg["num_epochs"],
                             train_loader=train_loaders[key],
-                            # eval_loader=eval_loaders[key],
-                            eval_loader=None,
+                            eval_loader=eval_loaders[key],
+                            # eval_loader=None,
                             ckpt_save_interval=cfg["ckpt_save_interval"],
                             starting_iteration=starting_iteration,
                             starting_epoch=starting_epoch)

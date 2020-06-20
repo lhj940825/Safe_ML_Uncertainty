@@ -40,7 +40,6 @@ def model_fn_eval_for_pu(model, eval_loader):
         target = torch.from_numpy(batch["target"]).cuda(non_blocking=True).float()
         target = target.reshape(-1, 1)
         stat = batch["stat"] # stat = [Y_mean, Y_std]
-        prior = batch["prior"]
 
         pred = model(input)
         # pred = stat[1] * pred + stat[0] # code for normalization new normalization
@@ -72,28 +71,43 @@ def model_fn(model, batch):
     return loss
 
 
-def model_fn_eval(model, eval_loader):
+def model_fn_eval(model, eval_loader, network_type='pu'):
     model.eval()
     eval_loss = 0.0
+    mean_list = []
+    var_list = []
     for it, batch in enumerate(eval_loader):
 
-        # loss = model_fn(model, batch)
-
-        # input, target = batch
         input = torch.from_numpy(batch["input"]).cuda(non_blocking=True).float()
         target = torch.from_numpy(batch["target"]).cuda(non_blocking=True).float()
         target = target.reshape(-1, 1)
         stat = batch["stat"] # stat = [Y_mean, Y_std]
-        prior = batch["prior"]
 
         pred = model(input)
-        # pred = stat[1] * pred + stat[0] # code for normalization new normalization
+        if network_type == 'pu':
+            mean = pred[:, 0]
+            mean = stat[1] * mean + stat[0]  # denormalization to compute the mean
+            mean = target - mean.view(-1, 1)
+            mean = np.reshape(mean.cpu().data.numpy(), (-1, 1))
 
-        loss = model.loss_fn(pred, target)
+            std = stat[1] * pred[:, 1]  # denormalization to compute the std
+            std = torch.exp(std)
+            var = np.reshape(torch.pow(std, 2).cpu().data.numpy(), (-1, 1))
 
-        eval_loss += loss.item()
-    return eval_loss / len(eval_loader)
+            mean_list.append(mean)
+            var_list.append(var)
 
+    mean_list = np.array(mean_list)
+    var_list = np.array(var_list)
+
+    mean_list = np.vstack(mean_list)
+    var_list = np.vstack(var_list)
+
+    return mean_list, var_list
+
+        # loss = model.loss_fn(pred, target)
+        # eval_loss += loss.item()
+    # return eval_loss / len(eval_loader)
 def eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
     NLL_list = None
     NLL_without_v_noise_list = None

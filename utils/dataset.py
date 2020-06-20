@@ -38,15 +38,6 @@ class UCIDataset(Dataset):
         if ('train' in data_file):
             store_train_mean_and_std(dataset_name,mean, std)
 
-        # Computation of prior variance and noise from:
-        # https://github.com/HIPS/Probabilistic-Backpropagation/blob/60ece68fe535b3b9d74cc71f996145e982872f2e/theano/PBP_net/prior.py
-        n_samples = 3.0
-        a_sigma = 2.0 * n_samples
-        b_sigma = 2.0 * n_samples * self.stat[1]
-        a_sigma_hat_nat = a_sigma - 1
-        b_sigma_hat_nat = -b_sigma
-        self.prior = np.asarray([a_sigma_hat_nat + 1, -b_sigma_hat_nat])
-
         # self.X = (self.X - np.min(self.X)) / (np.max(self.X) - np.min(self.X))
         self.X = scaler.fit_transform(self.X)
 
@@ -79,7 +70,6 @@ class UCIDataset(Dataset):
         rtn_dict["input"] = x
         rtn_dict["target"] = y
         rtn_dict["stat"] = self.stat
-        rtn_dict["prior"] = self.prior
 
         # return torch.tensor(x, dtype=torch.float), torch.tensor(y, dtype=torch.float).view(-1)# return in form of tensor
         # return torch.tensor(x, dtype=torch.float), torch.tensor(y, dtype=torch.float).view(-1), self.stat # code for normalization new normalization
@@ -91,7 +81,6 @@ class UCIDataset(Dataset):
             if k in ["input", "target"]:
                 rtn_dict[k] = np.stack([sample[k] for sample in batch], axis=0)
         rtn_dict["stat"] = self.stat
-        rtn_dict["prior"] = self.prior
 
         return rtn_dict
 

@@ -16,8 +16,8 @@ if __name__ == "__main__":
     output_dirs["kin8nm"] = os.path.join("./", "output_mc", "kin8nm")
     output_dirs["naval"] = os.path.join("./", "output_mc", "naval")
     output_dirs["yacht"] = os.path.join("./", "output_mc", "yacht")
-    # output_dirs["protein"] = os.path.join("./", "output_mc", "protein")
-    # output_dirs["year"] = os.path.join("./", "output_mc", "year")
+    output_dirs["protein"] = os.path.join("./", "output_mc", "protein")
+    output_dirs["year"] = os.path.join("./", "output_mc", "year")
 
     ckpt_dirs = {}
     for key, val in output_dirs.items():

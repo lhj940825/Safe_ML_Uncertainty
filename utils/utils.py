@@ -7,6 +7,8 @@ import yaml
 import matplotlib.pyplot as plt
 from matplotlib import colors
 from matplotlib.ticker import PercentFormatter
+import cv2
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 
 def split_wine_dataset(wine_data_dir, train_set_dir, test_set_dir):
@@ -167,7 +169,7 @@ def plot_histograms(data, output_dir=None, title="fig"):
         figure_dir = get_train_or_test_figure_dir(figure_dir, title)
         os.makedirs(figure_dir, exist_ok=True)
 
-        figure_dir = os.path.join(figure_dir, title + 'target_norm_histogram.png')
+        figure_dir = os.path.join(figure_dir, title + '_target_norm_histogram.png')
         plt.savefig(figure_dir)
     plt.show()
 
@@ -272,6 +274,40 @@ def plot_Mahalanobis_distance_with_Chi2_PDF(sample_M_distance_list, output_dir, 
     plt.savefig(figure_dir)
 
     plt.show()
+
+def plot_sequence_mean_var(seq_mean, seq_var, output_dir='./tmp_videos', title='sequence'):
+    fig = plt.figure(figsize=(8, 6))
+    canvas = FigureCanvas(fig)
+    w, h = canvas.get_width_height()
+    ax = fig.add_subplot(111)
+    os.makedirs(output_dir, exist_ok=True)
+    path = os.path.join(output_dir, title + '.avi')
+    writer = cv2.VideoWriter(path, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (w, h))
+    
+    max_mean = np.max(seq_mean)
+    max_var = np.max(seq_var)
+    min_mean = np.min(seq_mean)
+    min_var = np.min(seq_var)
+
+    for epoch, (mean, var) in enumerate(zip(seq_mean, seq_var)):
+        ax.cla()
+
+        ax.set_xlim(min_mean, max_mean)
+        ax.set_ylim(min_var, max_var)
+
+        ax.set_title('{} Epoch: {}'.format(title, epoch))
+        ax.set_xlabel('GT - mean')
+        # ax.axis("off")
+
+        ax.scatter(mean, var, s=2, c='blue')
+
+        canvas.draw()
+        img = np.frombuffer(canvas.tostring_rgb(), dtype='uint8').reshape(h, w, -1)
+        bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        writer.write(bgr)
+
+    plt.close(fig)
+    writer.release()
 
 def plot_NLL_cap_cnt(dataset_list, NLL_cap_cnt, cap, output_dir):
     """
