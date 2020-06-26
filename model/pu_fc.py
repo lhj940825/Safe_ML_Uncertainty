@@ -22,7 +22,8 @@ class pu_fc(nn.Module):
         out = self.fc1(x)
         out = F.relu(out, inplace=True)
         out = self.fc2(out)
-        out[:, 1] = out[:, 1] + self.bias
+        #out[:, 1] = out[:, 1] + self.bias
+        out[:,1] = torch.exp(out[:,1])
         # print('bias: ', self.bias)
 
         return out
@@ -43,7 +44,8 @@ class pu_fc2(nn.Module):
         out = self.fc1(x)
         out = F.relu(out, inplace=True)
         out = self.fc2(out)
-        out[:, 1] = out[:, 1] + self.bias
+        #out[:, 1] = out[:, 1] + self.bias
+        out[:,1] = torch.exp(out[:,1])
 
         return out
 
@@ -53,18 +55,14 @@ class custom_NLL():
         pass
 
     def __call__(self, label, mean: torch.autograd.Variable, output2: torch.autograd.Variable):
-
-
         #output2 = output2 + bias
         label = label.view(-1)
-        std = torch.exp(output2)
-        #print(std)
-        #print(std[std<=1])
+        std = output2 # exp has already been applied in forward path of the network.
+        #std = torch.exp(output2)
         var = torch.pow(std,2)
 
         NLL = torch.log(var)*0.5 + torch.div(torch.pow((label-mean),2), 2*var)
         NLL = torch.clamp(NLL, min = -100) # cap NLL values at -100
-        #print(np.shape(NLL))
         NLL = torch.mean(NLL) # average the computed NLL
 
         return NLL

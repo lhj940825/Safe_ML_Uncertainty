@@ -219,6 +219,115 @@ def plot_scatter2(ground_truth, mean, var, output_dir, title):
     plt.savefig(figure_dir)
     plt.show()
 
+def residual_error_and_std_plot_with_y_equal_abs_x_graph(residual_error, std, output_dir, title, y_axis_contraint, y_max=None):
+    """
+    plot the 'gt-mean and std' figure (named as scatter2 in other functions) with y=abs(x) graph
+
+    :param residual_error: Ground truth - mean
+    :param std: standard deviation
+    :param output_dir:
+    :param title:
+    :param y_axis_contraint: if yes, range of y is [0,3]
+    :return:
+    """
+
+    plt.scatter(residual_error, std)
+    plt.title(title+ ': GT-mean and std ')
+    plt.xlabel('Ground Truth - mean')
+    plt.ylabel('std')
+    #plt.ylim(0,5)
+
+    x = np.linspace(0, np.max(residual_error), 100)
+    plt.plot(x, x,'r-', lw=5, alpha=0.6, label='y=x')
+    plt.plot(-x, x,'r-', lw=5, alpha=0.6)
+    plt.legend()
+
+    os.makedirs(output_dir, exist_ok=True)
+    figure_dir = os.path.join(output_dir, 'figures')
+    figure_dir = get_train_or_test_figure_dir(figure_dir, title)
+    os.makedirs(figure_dir, exist_ok=True)
+
+    if not y_axis_contraint: # When y axis range is not contrained
+        figure_dir = os.path.join(figure_dir, 'GT-mean_and_std_for_each_epoch')
+
+    else: # when y axis is contrained
+
+        plt.ylim(ymin=0, ymax=y_max)
+        figure_dir = os.path.join(figure_dir, 'GT-mean_and_std_for_each_epoch_with_y_lim')
+
+    os.makedirs(figure_dir, exist_ok=True)
+
+    figure_dir = os.path.join(figure_dir, title + '_GT-mean_and_std.png')
+    plt.savefig(figure_dir)
+    plt.show()
+
+def residual_error_and_std_plot_with_NLL_heatmap(residual_error, std, output_dir, title, y_max, residual_error_max):
+    """
+    plot the 'gt-mean and std' figure (named as scatter2 in other functions) with y=abs(x) graph and NLL heatmap
+
+    :param residual_error: Ground truth - mean
+    :param std:
+    :param output_dir:
+    :param title:
+    :param y_max:
+    :param residual_error_max: maximum value in residual error
+    :return:
+    """
+
+    x_coordinates = np.linspace(-residual_error_max, residual_error_max, 100)
+    y_coordinates = np.linspace(0.01, y_max, 100)
+
+    def compute_NLL(gt_sub_mean, std):
+        if std == 0:
+            std = 1e-6
+
+        a = np.log(std**2)*0.5
+        b = np.divide(np.square(gt_sub_mean), (2*(std**2)))
+        return a+b
+
+
+    NLL_values = []
+
+    np.seterr(invalid='ignore') #ignoring the warning
+    for y_coordinate in y_coordinates:
+        for x_coordinate in x_coordinates:
+
+            NLL_values.append(np.log(compute_NLL(x_coordinate, y_coordinate)))
+    np.seterr(invalid='warn') #set numpy not to ignore warning
+
+
+    NLL_values = np.reshape(np.asarray(NLL_values), (len(y_coordinates), -1))
+    NLL_values = DataFrame(NLL_values, columns=x_coordinates, index=y_coordinates)
+    #NLL_values=(NLL_values-NLL_values.mean())/NLL_values.std()
+
+    pos = plt.pcolor(x_coordinates, y_coordinates, NLL_values)
+    cbar = plt.colorbar(pos)
+    cbar.set_label("log(NLL)")
+
+    #plot network outputs (GT-mean, std)
+    plt.scatter(residual_error, std)
+    plt.title(title+ ': GT-mean and std ')
+    plt.xlabel('Ground Truth - mean')
+    plt.ylabel('std')
+
+    #plot y=x
+    x = np.linspace(0, np.max(residual_error), 100)
+    plt.plot(x, x,'r-', lw=5, alpha=0.6, label='y=x')
+    plt.plot(-x, x,'r-', lw=5, alpha=0.6)
+    plt.legend()
+    plt.ylim(ymin=0, ymax=y_max)
+
+    figure_dir = os.path.join(output_dir, 'figures')
+    figure_dir = get_train_or_test_figure_dir(figure_dir, title)
+    os.makedirs(figure_dir, exist_ok=True)
+    figure_dir = os.path.join(figure_dir, 'GT-mean_and_std_for_each_epoch_with_y_lim_and_heatmap')
+    os.makedirs(figure_dir, exist_ok=True)
+
+    figure_dir = os.path.join(figure_dir, title + '_GT-mean_and_std.png')
+    plt.savefig(figure_dir)
+    plt.show()
+
+
 def every_10_epochs_plot_scatter2(ground_truth, mean, var, output_dir, title):
     """
 
@@ -232,6 +341,15 @@ def every_10_epochs_plot_scatter2(ground_truth, mean, var, output_dir, title):
 
     std = np.sqrt(var)
     gt_sub_mean = ground_truth-mean
+    y_max = 3 # maximum value in y_axis range
+
+    residual_error_and_std_plot_with_y_equal_abs_x_graph(gt_sub_mean,std,output_dir,title, y_axis_contraint=False)
+    residual_error_and_std_plot_with_y_equal_abs_x_graph(gt_sub_mean,std,output_dir,title, y_axis_contraint=True, y_max=y_max)
+
+    gt_sub_mean_max = abs(np.min(gt_sub_mean)) if abs(np.min(gt_sub_mean)) > abs(np.max(gt_sub_mean)) else abs(np.max(gt_sub_mean))
+    residual_error_and_std_plot_with_NLL_heatmap(gt_sub_mean,std,output_dir,title, y_max, gt_sub_mean_max)
+
+    """
     plt.scatter(gt_sub_mean, std)
     plt.title(title+ ': GT-mean and std ')
     plt.xlabel('Ground Truth - mean')
@@ -279,11 +397,12 @@ def every_10_epochs_plot_scatter2(ground_truth, mean, var, output_dir, title):
     figure_dir = os.path.join(figure_dir, title + '_GT-mean_and_std.png')
     plt.savefig(figure_dir)
     plt.show()
+    """
 
     #TODO codes below: do the same as above, but this time save the same figure with y-axis range [0,3] with heatmap of NLL values
     # generate array for the NLL heatmap
-    y_max = 3
-    gt_sub_mean_max = abs(np.min(gt_sub_mean)) if abs(np.min(gt_sub_mean)) > abs(np.max(gt_sub_mean)) else abs(np.max(gt_sub_mean))
+    #y_max = 3
+    #gt_sub_mean_max = abs(np.min(gt_sub_mean)) if abs(np.min(gt_sub_mean)) > abs(np.max(gt_sub_mean)) else abs(np.max(gt_sub_mean))
     x_coordinates = np.linspace(-gt_sub_mean_max, gt_sub_mean_max, 100)
     y_coordinates = np.linspace(0.01, y_max, 100)
 

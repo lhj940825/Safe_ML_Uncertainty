@@ -96,8 +96,9 @@ def model_fn_eval(model, eval_loader, network_type='pu'):
             mean = target - mean.view(-1, 1)
             mean = np.reshape(mean.cpu().data.numpy(), (-1, 1))
 
-            std = stat[1] * pred[:, 1]  # denormalization to compute the std
-            std = torch.exp(std)
+            std = pred[:, 1]
+            std = stat[1] * std  # denormalization to compute the std
+
             var = np.reshape(torch.pow(std, 2).cpu().data.numpy(), (-1, 1))
 
             mean_list.append(mean)
@@ -265,7 +266,7 @@ def pu_eval(model, test_loader, cfg, output_dir, tb_logger=None, title=""):
             mean = np.reshape(mean.cpu().data.numpy(),(-1,1))
 
             std = stat[1]*out[:,1] #denormalization to compute the std
-            std = torch.exp(std)
+            #std = torch.exp(std)
             var = np.reshape(torch.pow(std,2).cpu().data.numpy(), (-1,1))
 
             NLL, NLL_without_v_noise  = evaluate_with_NLL(mean, var, target.tolist(), dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
@@ -589,7 +590,7 @@ def pu_eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logge
             mean = np.reshape(mean.cpu().data.numpy(),(-1,1))
 
             std = stat[1]*out[:,1] #denormalization to compute the std
-            std = torch.exp(std)
+            #std = torch.exp(std)
             var = np.reshape(torch.pow(std,2).cpu().data.numpy(), (-1,1))
 
             NLL, NLL_without_v_noise  = evaluate_with_NLL(mean, var, target.tolist(),dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
@@ -679,7 +680,7 @@ def pu_eval_residualError_and_std_with_particular_epoch(model, train_loader, out
             mean = np.reshape(mean.cpu().data.numpy(),(-1,1))
 
             std = stat[1]*out[:,1] #denormalization to compute the std
-            std = torch.exp(std)
+            #std = torch.exp(std)
             var = np.reshape(torch.pow(std,2).cpu().data.numpy(), (-1,1))
 
             if mean_list is None:
