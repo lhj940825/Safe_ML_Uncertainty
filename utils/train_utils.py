@@ -105,7 +105,13 @@ class Trainer(object):
         if eval_loader is not None:
             seq_mean = np.array(seq_mean)
             seq_std = np.array(seq_var)
-            plot_sequence_mean_var(seq_mean, seq_var, output_dir=os.path.join(self.output_dir, 'net_output_scat_sequence'), title=self.title)
+            plot_sequence_mean_var(seq_mean, seq_var,
+                                   output_dir=os.path.join(self.output_dir, 'normalized_output_scat_sequence'),
+                                   title=self.title + '_unlimited')
+            plot_sequence_mean_var(seq_mean, seq_var,
+                                   xy_lim=[3.0, 3.0],
+                                   output_dir=os.path.join(self.output_dir, 'normalized_output_scat_sequence'),
+                                   title=self.title + '_limited')
 
     def _train_it(self, batch):
         self.model.train()  #Set the model to training mode

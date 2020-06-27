@@ -90,16 +90,29 @@ def model_fn_eval(model, eval_loader, network_type='pu'):
         stat = batch["stat"] # stat = [Y_mean, Y_std]
 
         pred = model(input)
+        # if network_type == 'pu':
+        #     mean = pred[:, 0]
+        #     mean = stat[1] * mean + stat[0]  # denormalization to compute the mean
+        #     mean = target - mean.view(-1, 1)
+        #     mean = np.reshape(mean.cpu().data.numpy(), (-1, 1))
+        #
+        #     std = pred[:, 1]
+        #     std = stat[1] * std  # denormalization to compute the std
+        #
+        #     var = np.reshape(torch.pow(std, 2).cpu().data.numpy(), (-1, 1))
+        #
+        #     mean_list.append(mean)
+        #     var_list.append(var)
+
+        # Normalized network output
         if network_type == 'pu':
-            mean = pred[:, 0]
-            mean = stat[1] * mean + stat[0]  # denormalization to compute the mean
+            mean = pred[:, 0] # normalized mean
+            target = (target - stat[0]) / stat[1] # normalized target
             mean = target - mean.view(-1, 1)
             mean = np.reshape(mean.cpu().data.numpy(), (-1, 1))
 
             std = pred[:, 1]
-            std = stat[1] * std  # denormalization to compute the std
-
-            var = np.reshape(torch.pow(std, 2).cpu().data.numpy(), (-1, 1))
+            var = np.reshape(torch.pow(std, 2).cpu().data.numpy(), (-1, 1)) # normalized variance
 
             mean_list.append(mean)
             var_list.append(var)

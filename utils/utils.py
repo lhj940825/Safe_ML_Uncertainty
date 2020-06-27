@@ -373,8 +373,6 @@ def plot_NLL_histogram(NLL_list, output_dir, title):
         save_histograms_and_scatter2_variants_videos(image_folder_dir, title[:title.find('=')] +'_NLL_histogram_without_v_noise' )
 
 
-
-
 def plot_scatter2_and_NLL_histogram_variants(ground_truth, mean, var, output_dir, title):
     """
     plot many variants of the 'ground truth - mean and std' figures and NLL histogram, e.g with y=x graph, with NLL heatmap, with y-axis contraint
@@ -472,7 +470,7 @@ def plot_Mahalanobis_distance_with_Chi2_PDF(sample_M_distance_list, output_dir, 
 
     plt.show()
 
-def plot_sequence_mean_var(seq_mean, seq_var, output_dir='./tmp_videos', title='sequence'):
+def plot_sequence_mean_var(seq_mean, seq_var, xy_lim=None, output_dir='./tmp_videos', title='sequence'):
     fig = plt.figure(figsize=(8, 6))
     canvas = FigureCanvas(fig)
     w, h = canvas.get_width_height()
@@ -483,10 +481,16 @@ def plot_sequence_mean_var(seq_mean, seq_var, output_dir='./tmp_videos', title='
 
     inf = 1e10
 
-    max_mean = min(inf, np.max(seq_mean))
-    max_var = min(inf, np.max(seq_var))
-    min_mean = max(-inf, np.min(seq_mean))
-    min_var = max(-inf, np.min(seq_var))
+    if xy_lim is None:
+        max_mean = min(inf, np.max(seq_mean))
+        max_var = min(inf, np.max(seq_var))
+        min_mean = max(-inf, np.min(seq_mean))
+        min_var = max(-inf, np.min(seq_var))
+    else:
+        max_mean = xy_lim[0]
+        max_var = xy_lim[1]
+        min_mean = -xy_lim[0]
+        min_var = 0.0
 
     for epoch, (mean, var) in enumerate(zip(seq_mean, seq_var)):
         ax.cla()
