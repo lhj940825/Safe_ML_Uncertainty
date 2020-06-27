@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import cv2
 import pandas as pd
 from pandas import DataFrame
 from sklearn.model_selection import train_test_split
@@ -11,6 +12,7 @@ from matplotlib.ticker import PercentFormatter
 import cv2
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
+max_epoch = '150'
 
 def split_wine_dataset(wine_data_dir, train_set_dir, test_set_dir):
 
@@ -219,7 +221,7 @@ def plot_scatter2(ground_truth, mean, var, output_dir, title):
     plt.savefig(figure_dir)
     plt.show()
 
-def residual_error_and_std_plot_with_y_equal_abs_x_graph(residual_error, std, output_dir, title, y_axis_contraint, y_max=None):
+def residual_error_and_std_plot_with_y_equal_abs_x_graph(residual_error, std, output_dir, title, y_axis_contraint, y_max=None, denormalized = None):
     """
     plot the 'gt-mean and std' figure (named as scatter2 in other functions) with y=abs(x) graph
 
@@ -248,20 +250,25 @@ def residual_error_and_std_plot_with_y_equal_abs_x_graph(residual_error, std, ou
     os.makedirs(figure_dir, exist_ok=True)
 
     if not y_axis_contraint: # When y axis range is not contrained
-        figure_dir = os.path.join(figure_dir, 'GT-mean_and_std_for_each_epoch')
-
+        image_folder_dir = os.path.join(figure_dir, 'GT-mean_and_std_for_each_epoch')
+        video_title = title[:title.find('=')] +'_GT-mean_and_std'
     else: # when y axis is contrained
 
         plt.ylim(ymin=0, ymax=y_max)
-        figure_dir = os.path.join(figure_dir, 'GT-mean_and_std_for_each_epoch_with_y_lim')
+        image_folder_dir = os.path.join(figure_dir, 'GT-mean_and_std_for_each_epoch_with_y_lim')
+        video_title = title[:title.find('=')] +'_GT-mean_and_std_with_y_lim'
 
     os.makedirs(figure_dir, exist_ok=True)
 
-    figure_dir = os.path.join(figure_dir, title + '_GT-mean_and_std.png')
+    figure_dir = os.path.join(image_folder_dir, title + '_GT-mean_and_std.png')
     plt.savefig(figure_dir)
     plt.show()
 
-def residual_error_and_std_plot_with_NLL_heatmap(residual_error, std, output_dir, title, y_max, residual_error_max):
+    if max_epoch in title: # if there are generated figures from epoch 0 to epoch max then generate the video out of those figures
+        save_histograms_and_scatter2_variants_videos(image_folder_dir, video_title)
+
+
+def residual_error_and_std_plot_with_NLL_heatmap(residual_error, std, output_dir, title, y_max, residual_error_max, denormalized = None):
     """
     plot the 'gt-mean and std' figure (named as scatter2 in other functions) with y=abs(x) graph and NLL heatmap
 
@@ -276,15 +283,6 @@ def residual_error_and_std_plot_with_NLL_heatmap(residual_error, std, output_dir
 
     x_coordinates = np.linspace(-residual_error_max, residual_error_max, 100)
     y_coordinates = np.linspace(0.01, y_max, 100)
-
-    def compute_NLL(gt_sub_mean, std):
-        if std == 0:
-            std = 1e-6
-
-        a = np.log(std**2)*0.5
-        b = np.divide(np.square(gt_sub_mean), (2*(std**2)))
-        return a+b
-
 
     NLL_values = []
 
@@ -320,16 +318,66 @@ def residual_error_and_std_plot_with_NLL_heatmap(residual_error, std, output_dir
     figure_dir = os.path.join(output_dir, 'figures')
     figure_dir = get_train_or_test_figure_dir(figure_dir, title)
     os.makedirs(figure_dir, exist_ok=True)
-    figure_dir = os.path.join(figure_dir, 'GT-mean_and_std_for_each_epoch_with_y_lim_and_heatmap')
+    image_folder_dir = os.path.join(figure_dir, 'GT-mean_and_std_for_each_epoch_with_y_lim_and_heatmap')
     os.makedirs(figure_dir, exist_ok=True)
 
-    figure_dir = os.path.join(figure_dir, title + '_GT-mean_and_std.png')
+    figure_dir = os.path.join(image_folder_dir, title + '_GT-mean_and_std.png')
     plt.savefig(figure_dir)
     plt.show()
 
 
-def every_10_epochs_plot_scatter2(ground_truth, mean, var, output_dir, title):
+    if max_epoch in title: # if there are generated figures from epoch 0 to epoch max then generate the video out of those figures
+        save_histograms_and_scatter2_variants_videos(image_folder_dir, title[:title.find('=')] +'_GT-mean_and_std_with_y_lim_and_heatmap' )
+
+
+def plot_NLL_histogram(NLL_list, output_dir, title):
     """
+    plot the histogram of given list of NLL values
+
+    :param NLL_list:
+    :param output_dir:
+    :param title:
+    :return:
+    """
+    fig, axs = plt.subplots(1, 1, tight_layout=True)
+    num_bins = 60
+
+    # N is the count in each bin, bins is the lower-limit of the bin
+    N, bins, patches = axs.hist(NLL_list, bins=num_bins, weights=np.ones(len(NLL_list)) / len(NLL_list))
+    axs.yaxis.set_major_formatter(PercentFormatter(1))
+
+    axs.set_title(title + ': NLL Histogram')
+    axs.set_xlabel('NLL value without v-noise')
+    # We'll color code by height, but you could use any scalar
+    fracs = N / N.max()
+
+    # we need to normalize the data to 0..1 for the full range of the colormap
+    norm = colors.Normalize(fracs.min(), fracs.max())
+
+    # Now, we'll loop through our objects and set the color of each accordingly
+    for thisfrac, thispatch in zip(fracs, patches):
+        color = plt.cm.viridis(norm(thisfrac))
+        thispatch.set_facecolor(color)
+
+    figure_dir = os.path.join(output_dir, 'figures')
+    figure_dir = get_train_or_test_figure_dir(figure_dir, title)
+    os.makedirs(figure_dir, exist_ok=True)
+    image_folder_dir = os.path.join(figure_dir, 'NLL_histograms_per_epoch')
+    os.makedirs(figure_dir, exist_ok=True)
+
+    figure_dir = os.path.join(image_folder_dir, title + '_NLL_histogram_without_v_noise.png')
+    plt.savefig(figure_dir)
+    plt.show()
+
+    if max_epoch in title: # if there are generated figures from epoch 0 to epoch max then generate the video out of those figures
+        save_histograms_and_scatter2_variants_videos(image_folder_dir, title[:title.find('=')] +'_NLL_histogram_without_v_noise' )
+
+
+
+
+def plot_scatter2_and_NLL_histogram_variants(ground_truth, mean, var, output_dir, title):
+    """
+    plot many variants of the 'ground truth - mean and std' figures and NLL histogram, e.g with y=x graph, with NLL heatmap, with y-axis contraint
 
     :param ground_truth:
     :param mean:
@@ -342,120 +390,30 @@ def every_10_epochs_plot_scatter2(ground_truth, mean, var, output_dir, title):
     std = np.sqrt(var)
     gt_sub_mean = ground_truth-mean
     y_max = 3 # maximum value in y_axis range
-
-    residual_error_and_std_plot_with_y_equal_abs_x_graph(gt_sub_mean,std,output_dir,title, y_axis_contraint=False)
-    residual_error_and_std_plot_with_y_equal_abs_x_graph(gt_sub_mean,std,output_dir,title, y_axis_contraint=True, y_max=y_max)
-
     gt_sub_mean_max = abs(np.min(gt_sub_mean)) if abs(np.min(gt_sub_mean)) > abs(np.max(gt_sub_mean)) else abs(np.max(gt_sub_mean))
-    residual_error_and_std_plot_with_NLL_heatmap(gt_sub_mean,std,output_dir,title, y_max, gt_sub_mean_max)
 
-    """
-    plt.scatter(gt_sub_mean, std)
-    plt.title(title+ ': GT-mean and std ')
-    plt.xlabel('Ground Truth - mean')
-    plt.ylabel('std')
-    #plt.ylim(0,5)
-
-    x = np.linspace(0, np.max(gt_sub_mean), 100)
-    plt.plot(x, x,'r-', lw=5, alpha=0.6, label='y=x')
-    plt.plot(-x, x,'r-', lw=5, alpha=0.6)
-    plt.legend()
-
-    os.makedirs(output_dir, exist_ok=True)
-    figure_dir = os.path.join(output_dir, 'figures')
-    figure_dir = get_train_or_test_figure_dir(figure_dir, title)
-    os.makedirs(figure_dir, exist_ok=True)
-    figure_dir = os.path.join(figure_dir, 'GT-mean_and_std_for_each_epoch')
-    os.makedirs(figure_dir, exist_ok=True)
-
-    figure_dir = os.path.join(figure_dir, title + '_GT-mean_and_std.png')
-    plt.savefig(figure_dir)
-    plt.show()
-
-    
-    #TODO codes below: do the same as above, but this time save the same figure with y-axis range [0,3] with y=x graph
-    plt.scatter(gt_sub_mean, std)
-    plt.title(title+ ': GT-mean and std ')
-    plt.xlabel('Ground Truth - mean')
-    plt.ylabel('std')
-    #plt.ylim(0,5)
+    for flag in [True, False]: # save figures with normalized
+        residual_error_and_std_plot_with_y_equal_abs_x_graph(gt_sub_mean,std,output_dir,title, y_axis_contraint=False, y_max=None, denormalized=flag)
+        residual_error_and_std_plot_with_y_equal_abs_x_graph(gt_sub_mean,std,output_dir,title, y_axis_contraint=True, y_max=y_max, denormalized=flag)
+        residual_error_and_std_plot_with_NLL_heatmap(gt_sub_mean,std,output_dir,title, y_max, gt_sub_mean_max, denormalized = flag)
 
 
-    x = np.linspace(0, np.max(gt_sub_mean), 100)
-    y_max = 3
-    plt.plot(x, x,'r-', lw=5, alpha=0.6, label='y=x')
-    plt.plot(-x, x,'r-', lw=5, alpha=0.6)
-    plt.legend()
-    plt.ylim(ymin=0, ymax=y_max)
+    NLL = compute_NLL(gt_sub_mean, std)
+    plot_NLL_histogram(NLL, output_dir, title)
+    #
 
-    figure_dir = os.path.join(output_dir, 'figures')
-    figure_dir = get_train_or_test_figure_dir(figure_dir, title)
-    os.makedirs(figure_dir, exist_ok=True)
-    figure_dir = os.path.join(figure_dir, 'GT-mean_and_std_for_each_epoch_with_y_lim')
-    os.makedirs(figure_dir, exist_ok=True)
 
-    figure_dir = os.path.join(figure_dir, title + '_GT-mean_and_std.png')
-    plt.savefig(figure_dir)
-    plt.show()
-    """
-
-    #TODO codes below: do the same as above, but this time save the same figure with y-axis range [0,3] with heatmap of NLL values
-    # generate array for the NLL heatmap
-    #y_max = 3
-    #gt_sub_mean_max = abs(np.min(gt_sub_mean)) if abs(np.min(gt_sub_mean)) > abs(np.max(gt_sub_mean)) else abs(np.max(gt_sub_mean))
-    x_coordinates = np.linspace(-gt_sub_mean_max, gt_sub_mean_max, 100)
-    y_coordinates = np.linspace(0.01, y_max, 100)
-
-    def compute_NLL(gt_sub_mean, std):
+def compute_NLL(gt_sub_mean, std):
+    if isinstance(std, np.float64):
         if std == 0:
             std = 1e-6
+    else: # when std is an array from numpy
+        std[std==0] = 1e-6
 
-        a = np.log(std**2)*0.5
-        b = np.divide(np.square(gt_sub_mean), (2*(std**2)))
-        return a+b
-
-
-    NLL_values = []
-
-    np.seterr(invalid='ignore') #ignoring the warning
-    for y_coordinate in y_coordinates:
-        for x_coordinate in x_coordinates:
-
-            NLL_values.append(np.log(compute_NLL(x_coordinate, y_coordinate)))
-    np.seterr(invalid='warn') #set numpy not to ignore warning
-
-
-    NLL_values = np.reshape(np.asarray(NLL_values), (len(y_coordinates), -1))
-    NLL_values = DataFrame(NLL_values, columns=x_coordinates, index=y_coordinates)
-    #NLL_values=(NLL_values-NLL_values.mean())/NLL_values.std()
-
-    pos = plt.pcolor(x_coordinates, y_coordinates, NLL_values)
-    cbar = plt.colorbar(pos)
-    cbar.set_label("log(NLL)")
-
-    #plot network outputs (GT-mean, std)
-    plt.scatter(gt_sub_mean, std)
-    plt.title(title+ ': GT-mean and std ')
-    plt.xlabel('Ground Truth - mean')
-    plt.ylabel('std')
-    
-    #plot y=x
-    x = np.linspace(0, np.max(gt_sub_mean), 100)
-    plt.plot(x, x,'r-', lw=5, alpha=0.6, label='y=x')
-    plt.plot(-x, x,'r-', lw=5, alpha=0.6)
-    plt.legend()
-    plt.ylim(ymin=0, ymax=y_max)
-
-    figure_dir = os.path.join(output_dir, 'figures')
-    figure_dir = get_train_or_test_figure_dir(figure_dir, title)
-    os.makedirs(figure_dir, exist_ok=True)
-    figure_dir = os.path.join(figure_dir, 'GT-mean_and_std_for_each_epoch_with_y_lim_and_heatmap')
-    os.makedirs(figure_dir, exist_ok=True)
-
-    figure_dir = os.path.join(figure_dir, title + '_GT-mean_and_std.png')
-    plt.savefig(figure_dir)
-    plt.show()
-
+    a = np.log(std**2)*0.5
+    b = np.divide(np.square(gt_sub_mean), (2*(std**2)))
+    NLL = a+b
+    return NLL
 
 
 def plot_Mahalanobis_distance(sample_M_distance_list, gt_M_distance_list, output_dir, title="fig"):
@@ -607,6 +565,27 @@ def store_train_mean_and_std(dataset_name,mean: np.float64,std):
     with open(yml_dir, 'w') as f:
         yaml.dump(data, f)
 
+
+def save_histograms_and_scatter2_variants_videos(image_folder, title):
+    video_folder = os.path.dirname(image_folder)
+    video_folder = os.path.join(video_folder, 'videos')
+    os.makedirs(video_folder, exist_ok=True)
+
+
+    video_name = title+'.avi'
+    video_name = os.path.join(video_folder, video_name)
+    images = [img for img in os.listdir(image_folder) if img.endswith(".png")]
+    images.sort(key=lambda f: int(f[f.find('=')+1: f.find('_')]))  # sort images to make those in right order: from epoch 0 to epoch 150
+
+    frame = cv2.imread(os.path.join(image_folder, images[0]))
+    height, width, layers = frame.shape
+    video = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 1, (width,height))
+
+    for image in images:
+        video.write(cv2.imread(os.path.join(image_folder, image)))
+
+    cv2.destroyAllWindows()
+    video.release()
 
 """
 def plot_Mahalanobis_distance(sample_M_distance_list, gt_M_distance_list, output_dir, title="fig"):

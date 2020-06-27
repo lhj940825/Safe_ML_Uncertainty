@@ -694,7 +694,7 @@ def pu_eval_residualError_and_std_with_particular_epoch(model, train_loader, out
                 gt_list = np.append(gt_list, np.squeeze(target.tolist()))
 
     #plot_scatter2(gt_list, mean_list, variance_list, output_dir, title)
-    every_10_epochs_plot_scatter2(gt_list, mean_list, variance_list, output_dir, title)
+    plot_scatter2_and_NLL_histogram_variants(gt_list, mean_list, variance_list, output_dir, title)
 
 
 
