@@ -217,7 +217,7 @@ def plot_scatter2(ground_truth, mean, var, output_dir, title):
     figure_dir = get_train_or_test_figure_dir(figure_dir, title)
     os.makedirs(figure_dir, exist_ok=True)
 
-    figure_dir = os.path.join(figure_dir, title + '_GT-mean_and_std.png')
+    figure_dir = os.path.join(figure_dir, title + ', GT-mean_and_std.png')
     plt.savefig(figure_dir)
     plt.show()
 
@@ -258,9 +258,10 @@ def residual_error_and_std_plot_with_y_equal_abs_x_graph(residual_error, std, ou
         image_folder_dir = os.path.join(figure_dir, 'GT-mean_and_std_for_each_epoch_with_y_lim')
         video_title = title[:title.find('=')] +'_GT-mean_and_std_with_y_lim'
 
-    os.makedirs(figure_dir, exist_ok=True)
+    os.makedirs(image_folder_dir, exist_ok=True)
+    figure_dir = os.path.join(image_folder_dir, title + ', GT-mean_and_std.png')
 
-    figure_dir = os.path.join(image_folder_dir, title + '_GT-mean_and_std.png')
+    #os.makedirs(figure_dir, exist_ok=True)
     plt.savefig(figure_dir)
     plt.show()
 
@@ -319,9 +320,9 @@ def residual_error_and_std_plot_with_NLL_heatmap(residual_error, std, output_dir
     figure_dir = get_train_or_test_figure_dir(figure_dir, title)
     os.makedirs(figure_dir, exist_ok=True)
     image_folder_dir = os.path.join(figure_dir, 'GT-mean_and_std_for_each_epoch_with_y_lim_and_heatmap')
-    os.makedirs(figure_dir, exist_ok=True)
+    os.makedirs(image_folder_dir, exist_ok=True)
 
-    figure_dir = os.path.join(image_folder_dir, title + '_GT-mean_and_std.png')
+    figure_dir = os.path.join(image_folder_dir, title + ', GT-mean_and_std.png')
     plt.savefig(figure_dir)
     plt.show()
 
@@ -363,9 +364,9 @@ def plot_NLL_histogram(NLL_list, output_dir, title):
     figure_dir = get_train_or_test_figure_dir(figure_dir, title)
     os.makedirs(figure_dir, exist_ok=True)
     image_folder_dir = os.path.join(figure_dir, 'NLL_histograms_per_epoch')
-    os.makedirs(figure_dir, exist_ok=True)
+    os.makedirs(image_folder_dir, exist_ok=True)
 
-    figure_dir = os.path.join(image_folder_dir, title + '_NLL_histogram_without_v_noise.png')
+    figure_dir = os.path.join(image_folder_dir, title + ', NLL_histogram_without_v_noise.png')
     plt.savefig(figure_dir)
     plt.show()
 
@@ -579,7 +580,7 @@ def save_histograms_and_scatter2_variants_videos(image_folder, title):
     video_name = title+'.avi'
     video_name = os.path.join(video_folder, video_name)
     images = [img for img in os.listdir(image_folder) if img.endswith(".png")]
-    images.sort(key=lambda f: int(f[f.find('=')+1: f.find('_')]))  # sort images to make those in right order: from epoch 0 to epoch 150
+    images.sort(key=lambda f: int(f[f.find('=')+1: f.find(',')]))  # sort images to make those in right order: from epoch 0 to epoch 150
 
     frame = cv2.imread(os.path.join(image_folder, images[0]))
     height, width, layers = frame.shape
