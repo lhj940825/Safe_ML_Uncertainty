@@ -8,7 +8,7 @@ import os
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from utils.utils import *
+# from utils.utils import *
 from sys import platform
 
 def data_to_torch_dataset(data, target):
@@ -112,23 +112,28 @@ class WineDataset(Dataset):
 
         return torch.tensor(x, dtype=torch.float), torch.tensor(y, dtype=torch.float).view(-1) #return in form of tensor
 
-def dataset_split(dataset, fname, tar_split=-1, split_ratio=0.1):
+def dataset_split(dataset, fname, tar_split=-1, split_ratio=0.1, sort_by_target=False):
     X = dataset[:, :tar_split]
     Y = dataset[:, tar_split]
     # Y = dataset[:, tar_split:] #Currently we only use one target feature for all datasets. This line is for multi targets and is commented
 
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=split_ratio, random_state=2020, shuffle=True)
-    X_train, X_eval, Y_train, Y_eval = train_test_split(X_train, Y_train, test_size=split_ratio, random_state=2020, shuffle=True)
+    if sort_by_target:
+        sorted_ids = np.argsort(Y)
+        X = X[sorted_ids]
+        Y = Y[sorted_ids]
+
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=split_ratio, shuffle=False)
+    # X_train, X_eval, Y_train, Y_eval = train_test_split(X_train, Y_train, test_size=split_ratio, random_state=2020, shuffle=True)
     train = np.hstack([X_train, Y_train.reshape(len(X_train), -1)])
-    eval = np.hstack([X_eval, Y_eval.reshape(len(X_eval), -1)])
+    # eval = np.hstack([X_eval, Y_eval.reshape(len(X_eval), -1)])
     test = np.hstack([X_test, Y_test.reshape(len(X_test), -1)])
 
     np.savetxt(fname + "_train.csv", train, delimiter=",", fmt="%10.6f")
-    np.savetxt(fname + "_eval.csv", train, delimiter=",", fmt="%10.6f")
+    # np.savetxt(fname + "_eval.csv", train, delimiter=",", fmt="%10.6f")
     np.savetxt(fname + "_test.csv", test, delimiter=",", fmt="%10.6f")
 
     train = np.genfromtxt(fname + "_train.csv", delimiter=',')
-    eval = np.genfromtxt(fname + "_eval.csv", delimiter=',')
+    # eval = np.genfromtxt(fname + "_eval.csv", delimiter=',')
     test = np.genfromtxt(fname + "_test.csv", delimiter=',')
     mean_train = np.mean(train, axis=0)
     std_train = np.std(train, axis=0)
@@ -138,20 +143,20 @@ def dataset_split(dataset, fname, tar_split=-1, split_ratio=0.1):
 if __name__ == "__main__":
     data_dirs = {}
     target_splits = {}
-    data_dirs["boston"] = os.path.join("./..", "data", "boston")
+    data_dirs["boston"] = os.path.join("./..", "data_ood", "boston")
     target_splits["boston"] = -1
-    data_dirs["wine"] = os.path.join("./..", "data", "wine")
+    data_dirs["wine"] = os.path.join("./..", "data_ood", "wine")
     target_splits["wine"] = -1
-    data_dirs["power_plant"] = os.path.join("./..", "data", "power_plant")
+    data_dirs["power_plant"] = os.path.join("./..", "data_ood", "power_plant")
     target_splits["power_plant"] = -1
-    data_dirs["concrete"] = os.path.join("./..", "data", "concrete")
+    data_dirs["concrete"] = os.path.join("./..", "data_ood", "concrete")
     target_splits["concrete"] = -1
 
-    data_dirs["energy"] = os.path.join("./..", "data", "energy")
+    data_dirs["energy"] = os.path.join("./..", "data_ood", "energy")
     target_splits["energy"] = -2
-    data_dirs["kin8nm"] = os.path.join("./..", "data", "kin8nm")
+    data_dirs["kin8nm"] = os.path.join("./..", "data_ood", "kin8nm")
     target_splits["kin8nm"] = -1
-    data_dirs["protein"] = os.path.join("./..", "data", "protein")
+    data_dirs["protein"] = os.path.join("./..", "data_ood", "protein")
     target_splits["protein"] = -1
 
     data_files = {}
@@ -162,14 +167,14 @@ if __name__ == "__main__":
         datasets[key] = np.genfromtxt(data_files[key], delimiter=',')[1:]
         mean = np.mean(datasets[key], axis=0)
         std = np.std(datasets[key], axis=0)
-        dataset_split(datasets[key], os.path.join(data_dir, key), tar_split=target_splits[key])
+        dataset_split(datasets[key], os.path.join(data_dir, key), tar_split=target_splits[key], split_ratio=0.5, sort_by_target=True)
 
-    naval_dir = os.path.join("./..", "data", "naval")
-    yacht_dir = os.path.join("./..", "data", "yacht")
+    naval_dir = os.path.join("./..", "data_ood", "naval")
+    yacht_dir = os.path.join("./..", "data_ood", "yacht")
     naval = np.genfromtxt(os.path.join(naval_dir, "naval.txt"))
     yacht = np.genfromtxt(os.path.join(yacht_dir, "yacht.data"))
-    dataset_split(naval, os.path.join(naval_dir, "naval"), tar_split=-2)
-    dataset_split(yacht, os.path.join(yacht_dir, "yacht"))
+    dataset_split(naval, os.path.join(naval_dir, "naval"), tar_split=-2, split_ratio=0.5, sort_by_target=True)
+    dataset_split(yacht, os.path.join(yacht_dir, "yacht"), split_ratio=0.5, sort_by_target=True)
 
     print("finished")
 
