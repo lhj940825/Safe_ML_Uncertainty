@@ -22,7 +22,7 @@ if __name__ == "__main__":
     output_dirs["naval"] = os.path.join("./", "output_mc", "naval")
     output_dirs["yacht"] = os.path.join("./", "output_mc", "yacht")
     output_dirs["protein"] = os.path.join("./", "output_mc", "protein")
-    output_dirs["year"] = os.path.join("./", "output_mc", "year")
+    # output_dirs["year"] = os.path.join("./", "output_mc", "year")
 
     ckpt_dirs = {}
     for key, val in output_dirs.items():
@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     data_dirs = {}
     for key, val in output_dirs.items():
-        data_dirs[key] = os.path.join("./data", key)
+        data_dirs[key] = os.path.join("./data_ood", key)
 
     data_files = {}
     for key, _ in data_dirs.items():
@@ -61,7 +61,7 @@ if __name__ == "__main__":
                                                          batch_size=cfg["batch_size"],
                                                          num_workers=0,
                                                          collate_fn=train_datasets[key].collate_batch)
-        eval_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[1]), testing=True)
+        eval_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[2]), testing=True)
         eval_loaders[key] = torch.utils.data.DataLoader(eval_datasets[key],
                                                         batch_size=cfg["batch_size"],
                                                         num_workers=0,

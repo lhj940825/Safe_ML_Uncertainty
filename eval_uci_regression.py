@@ -17,7 +17,7 @@ if __name__ == "__main__":
     output_dirs["naval"] = os.path.join("./", "output_mc", "naval")
     output_dirs["yacht"] = os.path.join("./", "output_mc", "yacht")
     output_dirs["protein"] = os.path.join("./", "output_mc", "protein")
-    output_dirs["year"] = os.path.join("./", "output_mc", "year")
+    # output_dirs["year"] = os.path.join("./", "output_mc", "year")
 
     ckpt_dirs = {}
     for key, val in output_dirs.items():
@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
     data_dirs = {}
     for key, val in output_dirs.items():
-        data_dirs[key] = os.path.join("./data", key)
+        data_dirs[key] = os.path.join("./data_ood", key)
 
     data_files = {}
     for key, _ in data_dirs.items():

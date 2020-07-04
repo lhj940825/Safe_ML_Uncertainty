@@ -46,7 +46,7 @@ if __name__ == '__main__':
 
     data_dirs = {}
     for key, val in output_dirs.items():
-        data_dirs[key] = os.path.join("./data", key)
+        data_dirs[key] = os.path.join("./data_ood", key)
 
     data_files = {}
     for key, _ in data_dirs.items():

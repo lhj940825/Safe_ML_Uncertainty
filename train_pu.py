@@ -41,7 +41,7 @@ if __name__ == "__main__":
     output_dirs["naval"] =  []
     output_dirs["yacht"] =  []
     output_dirs["protein"] =  []
-    output_dirs["year"] =  []
+    # output_dirs["year"] =  []
 
     for key, output_dir in output_dirs.items():
         output_dirs[key] = os.path.join('./output_pu', key, 'parametric_uncertainty')
@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
     data_dirs = {}
     for key, val in output_dirs.items():
-        data_dirs[key] = os.path.join("./data", key)
+        data_dirs[key] = os.path.join("./data_ood", key)
 
     data_files = {}
     for key, _ in data_dirs.items():
