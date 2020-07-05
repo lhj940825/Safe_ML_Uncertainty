@@ -18,7 +18,7 @@ if __name__ == '__main__':
     # TODO::put all kinds of cfgs and hyperparameter into a config file. e.g. yaml
     cfg = {}
     cfg["ckpt"] = None
-    cfg["num_epochs"] = 40
+    cfg["num_epochs"] = 150
     cfg["ckpt_save_interval"] = 10
     cfg["batch_size"] = 100
     cfg["grad_norm_clip"] = None

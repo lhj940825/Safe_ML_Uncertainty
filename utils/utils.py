@@ -145,6 +145,56 @@ def plot_and_save_histograms(NLL_list, RMSE_list, output_dir, title="fig"):
     plt.savefig(figure_dir)
     plt.show()
 
+
+def NLL_histogram_for_pu_and_mc_ood_dataset(pu_NLL_list, mc_NLL_list, output_dir, title, cur_epoch):
+    fig, axs = plt.subplots(1, 2, tight_layout=True)
+    num_bins = 60
+
+    # N is the count in each bin, bins is the lower-limit of the bin
+    N, bins, patches = axs[0].hist(pu_NLL_list, bins=num_bins, weights=np.ones(len(pu_NLL_list)) / len(pu_NLL_list))
+    axs[0].yaxis.set_major_formatter(PercentFormatter(1))
+
+    axs[0].set_title(title + ': PU_NLL Histogram')
+    axs[0].set_xlabel('NLL value')
+    # We'll color code by height, but you could use any scalar
+    fracs = N / N.max()
+
+    # we need to normalize the data to 0..1 for the full range of the colormap
+    norm = colors.Normalize(fracs.min(), fracs.max())
+
+    # Now, we'll loop through our objects and set the color of each accordingly
+    for thisfrac, thispatch in zip(fracs, patches):
+        color = plt.cm.viridis(norm(thisfrac))
+        thispatch.set_facecolor(color)
+
+    N, bins, patches = axs[1].hist(mc_NLL_list, bins=num_bins, weights=np.ones(len(mc_NLL_list)) / len(mc_NLL_list))
+    axs[1].yaxis.set_major_formatter(PercentFormatter(1))
+
+    axs[1].set_title('MC_NLL Histogram, epoch= ' + str(cur_epoch))
+    axs[1].set_xlabel('NLL value')
+    # We'll color code by height, but you could use any scalar
+    fracs = N / N.max()
+
+    # we need to normalize the data to 0..1 for the full range of the colormap
+    norm = colors.Normalize(fracs.min(), fracs.max())
+
+    # Now, we'll loop through our objects and set the color of each accordingly
+    for thisfrac, thispatch in zip(fracs, patches):
+        color = plt.cm.viridis(norm(thisfrac))
+        thispatch.set_facecolor(color)
+
+    os.makedirs(output_dir, exist_ok=True)
+    figure_dir = os.path.join(output_dir, 'figures')
+    figure_dir = get_train_or_test_figure_dir(figure_dir, title)
+    os.makedirs(figure_dir, exist_ok=True)
+
+    figure_dir = os.path.join(figure_dir, title + '_NLL_RMSE_histogram_epoch='+str(cur_epoch)+'.png')
+    plt.savefig(figure_dir)
+    plt.show()
+
+
+
+
 def plot_histograms(data, output_dir=None, title="fig"):
     ax = plt.subplot()
     num_bins = 30
@@ -268,7 +318,7 @@ def residual_error_and_std_plot_with_y_equal_abs_x_graph(residual_error, std, ou
     if max_epoch in title: # if there are generated figures from epoch 0 to epoch max then generate the video out of those figures
         save_histograms_and_scatter2_variants_videos(image_folder_dir, video_title)
 
-def residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc(pu_residual_error, pu_std, mc_residual_error, mc_std, output_dir, title, y_axis_contraint, y_max=None):
+def residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc_of_ood(pu_residual_error, pu_std, mc_residual_error, mc_std, output_dir, title, y_axis_contraint, y_max=None, cur_epoch=None):
     """
     for MC Dropout and Parametric Uncertainty, plot the 'gt-mean and std' figure (named as scatter2 in other functions) with y=abs(x) graph
 
@@ -295,13 +345,13 @@ def residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc(pu_residu
     axs[0].legend()
 
     axs[1].scatter(mc_residual_error, mc_std)
-    axs[1].set_title('GT-mean of MC')
+    axs[1].set_title('GT-mean of MC, '+ str(cur_epoch))
     axs[1].set_xlabel('GT-Mean')
     axs[1].set_ylabel('std')
     if y_axis_contraint:
         axs[1].set_ylim([0, y_max])
 
-    x = np.linspace(0, np.max(pu_residual_error), 100)
+    x = np.linspace(0, np.max(mc_residual_error), 100)
     axs[1].plot(x, x,'r-', lw=5, alpha=0.6, label='y=x')
     axs[1].plot(-x,x,'r-', lw=5, alpha=0.6)
     axs[1].legend()
@@ -313,9 +363,9 @@ def residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc(pu_residu
     os.makedirs(figure_dir, exist_ok=True)
 
     if y_axis_contraint:
-        figure_dir = os.path.join(figure_dir, title + ', GT-mean_and_std_of_PU_and_MC_with_ylim.png')
+        figure_dir = os.path.join(figure_dir, title + ', GT-mean_and_std_of_PU_and_MC_with_ylim_epoch='+str(cur_epoch)+'.png')
     else:
-        figure_dir = os.path.join(figure_dir, title + ', GT-mean_and_std_of_PU_and_MC.png')
+        figure_dir = os.path.join(figure_dir, title + ', GT-mean_and_std_of_PU_and_MC_epoch='+str(cur_epoch)+'.png')
 
     plt.savefig(figure_dir)
     plt.show()
