@@ -25,14 +25,14 @@ if __name__ == '__main__':
     #Create directory for storing results
     output_dirs = {}
     output_dirs["boston"] = []
-    #output_dirs["wine"] =  []
-    #output_dirs["power_plant"] =  []
-    #output_dirs["concrete"] =  []
-    #output_dirs["energy"] = []
-    #output_dirs["kin8nm"] = []
-    #output_dirs["naval"] =  []
-    #output_dirs["yacht"] =  []
-    #output_dirs["protein"] =  []
+    output_dirs["wine"] =  []
+    output_dirs["power_plant"] =  []
+    output_dirs["concrete"] =  []
+    output_dirs["energy"] = []
+    output_dirs["kin8nm"] = []
+    output_dirs["naval"] =  []
+    output_dirs["yacht"] =  []
+    output_dirs["protein"] =  []
     #output_dirs["year"] =  []
 
     for key, output_dir in output_dirs.items():
@@ -138,57 +138,42 @@ if __name__ == '__main__':
         print("Finished\n")
 
 
-"""
-    # Summarize the result into table and save it
-    results = {}
-    for key, model in pu_models.items():
-        print("==================================Evaluating {}==========================================".format(key))
-        result = pu_eval(model, test_loader=test_loaders[key], cfg=cfg, output_dir=output_dirs[key], tb_logger=tb_loggers[key], title='test-'+key)
-        results[key] = result
-
-        #TODO below function is to generate figures for training dataset as requested by Joachim
-        pu_eval_with_training_dataset(model, train_loaders[key], cfg=cfg, output_dir=output_dirs[key], tb_logger=tb_loggers[key], title='train-'+key)
-        print("Finished\n")
-
-
-    # plot the gt-mean and std figures for every 10 epochs to see the training process of PU model
-    ckpt_idxs = np.linspace(start=0, stop=cfg["num_epochs"], num=(cfg["num_epochs"]//10 +1), dtype=int) # ckpt_idxs = [0,10,20,...,150]
-    for key, model in pu_models.items():
-        for idx in ckpt_idxs:
-            cur_ckpt =  '{}.pth'.format(os.path.join(pu_ckpt_dirs[key], "ckpt_e{}".format(idx)))
-            model.load_state_dict(torch.load(cur_ckpt)["model_state"], strict=False)
-            pu_eval_residualError_and_std_with_particular_epoch(model= model,train_loader=train_loaders[key], output_dir=output_dirs[key],title='train-'+key+'-epoch='+str(idx))
-
     dataset_list = []
-    NLL_list = []
-    NLL_without_v_Noise_list = []
-    RMSE_list = []
-    NLL_over_cap_cnt = []
-    cap = 0
+    pu_NLL_list = []
+    pu_NLL_without_v_Noise_list = []
+    pu_RMSE_list = []
 
-    for key, val in results.items():
+    mc_NLL_list = []
+    mc_NLL_without_v_Noise_list = []
+    mc_RMSE_list = []
+
+
+    for key, val in pu_results.items():
         dataset_list.append(key)
-        NLL_list.append(val[0][0])
-        RMSE_list.append(val[0][1])
-        NLL_over_cap_cnt.append(val[2][0])
-        cap = val[2][1]
-        NLL_without_v_Noise_list.append(val[3][0])
+        pu_NLL_list.append(val[0][0])
+        pu_RMSE_list.append(val[0][1])
+        pu_NLL_without_v_Noise_list.append(val[3][0])
 
-    err_df = pd.DataFrame(index=range(len(dataset_list)), columns=["Datasets", "RMSE", "NLL", "NLL_no_v_noise"])
+    for key, val in mc_results.items():
+        mc_NLL_list.append(val[0][0])
+        mc_RMSE_list.append(val[0][1])
+        mc_NLL_without_v_Noise_list.append(val[3][0])
+
+    err_df = pd.DataFrame(index=range(len(dataset_list)), columns=["Datasets", "pu_RMSE", "pu_NLL", "pu_NLL_no_v_noise", 'mc_RMSE', 'mc_NLL', 'mc_NLL_no_v_noise'])
     # a = pd.DataFrame(dataset_list)
     err_df["Datasets"] = pd.DataFrame(dataset_list)
-    err_df["RMSE"] = pd.DataFrame(RMSE_list)
-    err_df["NLL"] = pd.DataFrame(NLL_list)
-    err_df["NLL_no_v_noise"] = pd.DataFrame(NLL_without_v_Noise_list)
+    err_df["pu_RMSE"] = pd.DataFrame(pu_RMSE_list)
+    err_df["pu_NLL"] = pd.DataFrame(pu_NLL_list)
+    err_df["pu_NLL_no_v_noise"] = pd.DataFrame(pu_NLL_without_v_Noise_list)
+    err_df["mc_RMSE"] = pd.DataFrame(mc_RMSE_list)
+    err_df["mc_NLL"] = pd.DataFrame(mc_NLL_list)
+    err_df["mc_NLL_no_v_noise"] = pd.DataFrame(mc_NLL_without_v_Noise_list)
 
 
-    err_sum_dir = "./output_pu/err_summary"
+    err_sum_dir = "./output_ood/err_summary"
     os.makedirs(err_sum_dir, exist_ok=True)
-    err_df.to_csv(os.path.join(err_sum_dir, "pu_err_summary.csv"))
+    err_df.to_csv(os.path.join(err_sum_dir, "ood_err_summary.csv"), float_format='%.5f')
 
-    plot_NLL_cap_cnt(dataset_list, NLL_over_cap_cnt, cap, err_sum_dir)
 
     #Finalizing
     print("Analysis finished\n")
-    #TODO: integrate logging, visualiztion, GPU data parallel etc in the future
-"""

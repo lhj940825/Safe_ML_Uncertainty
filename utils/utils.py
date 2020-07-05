@@ -280,7 +280,7 @@ def residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc(pu_residu
     :return:
     """
 
-    fig, axs = plt.subplots(2, 1)
+    fig, axs = plt.subplots(1, 2)
 
     axs[0].scatter(pu_residual_error, pu_std)
     axs[0].set_title(title+': GT-mean of PU')
@@ -295,7 +295,7 @@ def residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc(pu_residu
     axs[0].legend()
 
     axs[1].scatter(mc_residual_error, mc_std)
-    axs[1].set_title('GT-mean of PU')
+    axs[1].set_title('GT-mean of MC')
     axs[1].set_xlabel('GT-Mean')
     axs[1].set_ylabel('std')
     if y_axis_contraint:
@@ -312,22 +312,12 @@ def residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc(pu_residu
     figure_dir = get_train_or_test_figure_dir(figure_dir, title)
     os.makedirs(figure_dir, exist_ok=True)
 
-    if not y_axis_contraint: # When y axis range is not contrained
-        image_folder_dir = os.path.join(figure_dir, 'GT-mean_and_std_for_each_epoch')
-        video_title = title[:title.find('=')] +'_GT-mean_and_std'
-    else: # when y axis is contrained
+    if y_axis_contraint:
+        figure_dir = os.path.join(figure_dir, title + ', GT-mean_and_std_of_PU_and_MC_with_ylim.png')
+    else:
+        figure_dir = os.path.join(figure_dir, title + ', GT-mean_and_std_of_PU_and_MC.png')
 
-        plt.ylim(ymin=0, ymax=y_max)
-        image_folder_dir = os.path.join(figure_dir, 'GT-mean_and_std_for_each_epoch_with_y_lim')
-        video_title = title[:title.find('=')] +'_GT-mean_and_std_with_y_lim'
-
-    os.makedirs(image_folder_dir, exist_ok=True)
-    figure_dir = os.path.join(image_folder_dir, title + ', GT-mean_and_std.png')
-
-    #os.makedirs(figure_dir, exist_ok=True)
     plt.savefig(figure_dir)
-
-
     plt.show()
 
 
