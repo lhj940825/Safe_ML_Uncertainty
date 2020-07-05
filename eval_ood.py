@@ -118,8 +118,7 @@ if __name__ == '__main__':
         print("loading checkpoint ckpt_e{}".format(cfg["eval_epoch"]))
         mc_models[key].load_state_dict(torch.load(cur_ckpts[key])["model_state"], strict=False)
 
-        # Unlike MCDropout, we set the models evaluate mode here.
-        mc_models[key].eval()
+        mc_models[key].train()
 
 
 

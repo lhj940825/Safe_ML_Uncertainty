@@ -98,7 +98,10 @@ if __name__ == '__main__':
             mc_models[key] = FC(dataset.input_dim, cfg["pdrop"])
 
         pu_models[key].cuda()
+        pu_models[key].train()
+
         mc_models[key].cuda()
+        mc_models[key].train()
 
 
     #Prepare training
