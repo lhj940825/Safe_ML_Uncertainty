@@ -7,11 +7,9 @@
 from torch import optim
 from utils.train_utils import Trainer, load_checkpoint
 from utils.eval_utils import model_fn_for_pu, model_fn_eval, eval, eval_with_training_dataset
-import utils.train_utils as tu
 from utils.dataset import *
 from utils.log_utils import create_tb_logger
 from utils.utils import *
-import matplotlib.pyplot as plt
 
 
 if __name__ == "__main__":
@@ -53,7 +51,7 @@ if __name__ == "__main__":
 
     data_dirs = {}
     for key, val in output_dirs.items():
-        data_dirs[key] = os.path.join("./data_ood", key)
+        data_dirs[key] = os.path.join("./data", key)
 
     data_files = {}
     for key, _ in data_dirs.items():

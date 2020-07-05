@@ -268,6 +268,68 @@ def residual_error_and_std_plot_with_y_equal_abs_x_graph(residual_error, std, ou
     if max_epoch in title: # if there are generated figures from epoch 0 to epoch max then generate the video out of those figures
         save_histograms_and_scatter2_variants_videos(image_folder_dir, video_title)
 
+def residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc(pu_residual_error, pu_std, mc_residual_error, mc_std, output_dir, title, y_axis_contraint, y_max=None):
+    """
+    for MC Dropout and Parametric Uncertainty, plot the 'gt-mean and std' figure (named as scatter2 in other functions) with y=abs(x) graph
+
+    :param residual_error: Ground truth - mean
+    :param std: standard deviation
+    :param output_dir:
+    :param title:
+    :param y_axis_contraint: if yes, range of y is [0,3]
+    :return:
+    """
+
+    fig, axs = plt.subplots(2, 1)
+
+    axs[0].scatter(pu_residual_error, pu_std)
+    axs[0].set_title(title+': GT-mean of PU')
+    axs[0].set_xlabel('GT-Mean')
+    axs[0].set_ylabel('std')
+    if y_axis_contraint:
+        axs[0].set_ylim([0, y_max])
+
+    x = np.linspace(0, np.max(pu_residual_error), 100)
+    axs[0].plot(x, x,'r-', lw=5, alpha=0.6, label='y=x')
+    axs[0].plot(-x,x,'r-', lw=5, alpha=0.6)
+    axs[0].legend()
+
+    axs[1].scatter(mc_residual_error, mc_std)
+    axs[1].set_title('GT-mean of PU')
+    axs[1].set_xlabel('GT-Mean')
+    axs[1].set_ylabel('std')
+    if y_axis_contraint:
+        axs[1].set_ylim([0, y_max])
+
+    x = np.linspace(0, np.max(pu_residual_error), 100)
+    axs[1].plot(x, x,'r-', lw=5, alpha=0.6, label='y=x')
+    axs[1].plot(-x,x,'r-', lw=5, alpha=0.6)
+    axs[1].legend()
+
+
+    os.makedirs(output_dir, exist_ok=True)
+    figure_dir = os.path.join(output_dir, 'figures')
+    figure_dir = get_train_or_test_figure_dir(figure_dir, title)
+    os.makedirs(figure_dir, exist_ok=True)
+
+    if not y_axis_contraint: # When y axis range is not contrained
+        image_folder_dir = os.path.join(figure_dir, 'GT-mean_and_std_for_each_epoch')
+        video_title = title[:title.find('=')] +'_GT-mean_and_std'
+    else: # when y axis is contrained
+
+        plt.ylim(ymin=0, ymax=y_max)
+        image_folder_dir = os.path.join(figure_dir, 'GT-mean_and_std_for_each_epoch_with_y_lim')
+        video_title = title[:title.find('=')] +'_GT-mean_and_std_with_y_lim'
+
+    os.makedirs(image_folder_dir, exist_ok=True)
+    figure_dir = os.path.join(image_folder_dir, title + ', GT-mean_and_std.png')
+
+    #os.makedirs(figure_dir, exist_ok=True)
+    plt.savefig(figure_dir)
+
+
+    plt.show()
+
 
 def residual_error_and_std_plot_with_NLL_heatmap(residual_error, std, output_dir, title, y_max, residual_error_max, denormalized = None):
     """

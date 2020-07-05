@@ -14,7 +14,6 @@
 *.pyc
 *.tfevents*
 
-
 .idea/
 .vscode/
 *.egg-info/
@@ -22,6 +21,8 @@ build/
 ckpt/
 ckpts/
 data/
+data_ood/
+
 dist/
 output/
 results/
@@ -30,6 +31,9 @@ wandb/
 output_de/
 output_pu/
 output_mc/
+output_ood/
+
 tmp_videos/
+
 
 slurm_logs
