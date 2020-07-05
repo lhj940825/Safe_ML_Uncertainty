@@ -25,29 +25,40 @@ class UCIDataset(Dataset):
         self.Y = data[:, -1]
         # #Keep the stat params for normalization.
 
-        mean = np.mean(self.Y, axis=0)
-        std =  np.std(self.Y, axis=0)
-        self.stat = np.asarray([mean,std])
-
-        #a = data_path.split('/')
-
         if platform == 'win32':
             dataset_name, data_file = data_path.split('\\')[-2:] #data_path.split('\\')[1] = dataset name, data_path.split('\\')[2] = datafile to load, either train or eval, or test set
         else:
             dataset_name, data_file = data_path.split('/')[-2:] #data_path.split('\\')[1] = dataset name, data_path.split('\\')[2] = datafile to load, either train or eval, or test set
-        if ('train' in data_file):
-            store_train_mean_and_std(dataset_name,mean, std)
 
-        # self.X = (self.X - np.min(self.X)) / (np.max(self.X) - np.min(self.X))
+        if not testing:
+            mean = np.mean(self.Y, axis=0)
+            std = np.std(self.Y, axis=0)
+            print("Writing {} train stat to config file".format(dataset_name))
+            store_train_mean_and_std(dataset_name, mean, std)
+            self.stat = np.asarray([mean, std])
+        else:
+            yml_dir = os.path.join(os.getcwd(), 'configs/mean_std.yml')
+            stream = open(yml_dir, 'r')
+            stats_train = yaml.load(stream, Loader=yaml.BaseLoader)
+            mean = float(stats_train[dataset_name]['mean'])
+            std = float(stats_train[dataset_name]['std'])
+            self.stat = np.asarray([mean, std])
+
+        #a = data_path.split('/')
+
+        # if platform == 'win32':
+        #     dataset_name, data_file = data_path.split('\\')[-2:] #data_path.split('\\')[1] = dataset name, data_path.split('\\')[2] = datafile to load, either train or eval, or test set
+        # else:
+        #     dataset_name, data_file = data_path.split('/')[-2:] #data_path.split('\\')[1] = dataset name, data_path.split('\\')[2] = datafile to load, either train or eval, or test set
+        # if ('train' in data_file):
+        #     store_train_mean_and_std(dataset_name,mean, std)
+
+        # N(0, 1) normalization
         self.X = scaler.fit_transform(self.X)
-
-
-        # code for normalization new normalization
         if not testing:
             self.Y = scaler.fit_transform(self.Y.reshape(-1, 1))
 
         self.input_dim = len(self.X[0])
-
         self.transform = transform
 
     def __len__(self):
