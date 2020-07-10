@@ -7,7 +7,7 @@
 '''
 
 from torch import optim
-from utils.train_utils import Trainer, load_checkpoint
+from utils.train_utils import Trainer, load_checkpoint, OOD_Trainer
 from utils.eval_utils import model_fn_for_pu, model_fn_eval, eval, eval_with_training_dataset, model_fn
 from utils.dataset import *
 from utils.log_utils import create_tb_logger
@@ -24,7 +24,7 @@ if __name__ == '__main__':
     cfg["grad_norm_clip"] = None
     cfg["num_networks"] = 10
     cfg["pdrop"] = 0.1
-    learning_rate = {'PU' : 0.001, 'MC':0.1}
+    learning_rate = {'PU' : 0.001, 'MC':0.001}
 
     #TODO: Simplifiy and automate the process
     #Create directory for storing results
@@ -130,7 +130,7 @@ if __name__ == '__main__':
     for key, model in pu_models.items():
         print(key, model)
         print("*******************************Training pu_models: {}*******************************\n".format(key))
-        pu_trainers[key] = Trainer(model=model,
+        pu_trainers[key] = OOD_Trainer(model=model,
                                    model_fn=model_fn_for_pu,
                                    model_fn_eval=model_fn_eval,
                                    optimizer=pu_optimizers[key],
@@ -159,7 +159,7 @@ if __name__ == '__main__':
     for key, model in mc_models.items():
         print(key, model)
         print("*******************************Training Mc models: {}*******************************\n".format(key))
-        mc_trainers[key] = Trainer(model=model,
+        mc_trainers[key] = OOD_Trainer(model=model,
                                    model_fn= model_fn,
                                    model_fn_eval=model_fn_eval,
                                    optimizer=mc_optimizers[key],

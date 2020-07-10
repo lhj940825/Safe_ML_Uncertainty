@@ -134,7 +134,7 @@ if __name__ == '__main__':
             mc_results[key] = mc_result
 
             #TODO below function is to generate figures for training dataset as requested by Joachim
-            #pu_eval_with_training_dataset(model, train_loaders[key], cfg=cfg, output_dir=output_dirs[key], tb_logger=tb_loggers[key], title='train-'+key)
+            ood_eval_with_training_datset(pu_models[key], mc_models[key], train_loader=train_loaders[key], cfg=cfg, output_dir=output_dirs[key], tb_logger=tb_loggers[key], title='train-'+key, cur_epoch=ckpt_epoch )
             print("Finished\n")
 
 

@@ -869,6 +869,129 @@ def pu_eval_residualError_and_std_with_particular_epoch(model, train_loader, out
     #plot_scatter2(gt_list, mean_list, variance_list, output_dir, title)
     plot_scatter2_and_NLL_histogram_variants(gt_list, mean_list, variance_list, output_dir, title)
 
+def ood_eval_with_training_datset(pu_model, mc_model, train_loader, output_dir,cfg, tb_logger=None, title="", cur_epoch = None):
+
+    # lists for Parametric Uncertainty models
+    pu_NLL_list = None
+    pu_NLL_without_v_noise_list = None
+    pu_RMSE_list = None
+    pu_mean_list = None
+    pu_variance_list = None
+    pu_gt_list = None # to store all labels(ground truth)
+
+    # lists for MC Dropout models
+    mc_NLL_list = None
+    mc_NLL_without_v_noise_list = None
+    mc_RMSE_list = None
+    mc_mean_list = None
+    mc_variance_list = None
+    mc_gt_list = None # to store all labels(ground truth)
+    #gt_M_distance_list = []
+    #sample_M_distance_list = []
+
+    if platform == 'win32':
+        dataset_name = output_dir.split("\\")[1]
+    else:
+        dataset_name = output_dir.split("/")[2]
+
+    with torch.no_grad():
+
+        for cur_it, batch in enumerate(train_loader):
+            # input, target = batch
+            input = torch.from_numpy(batch["input"]).cuda(non_blocking=True).float()
+            target = torch.from_numpy(batch["target"]).cuda(non_blocking=True).float()
+            target = target.reshape(-1, 1)
+            stat = batch["stat"]
+
+            #TODO prior is no more used to compute v-noise
+            #prior = batch["prior"]
+            # stat = stat.cuda(non_blocking=True)[0] # code for normalization new normalization
+            #v_noise = prior[1] / (prior[0] - 1) * stat[1] ** 2
+
+            #TODO Compute the PU model output
+            out = pu_model(input)
+            mean = out[:,0]
+            mean = stat[1]*mean+stat[0] #denormalization to compute the mean
+            mean = np.reshape(mean.cpu().data.numpy(),(-1,1))
+
+            std = stat[1]*out[:,1] #denormalization to compute the std
+            #std = torch.exp(std)
+            var = np.reshape(torch.pow(std,2).cpu().data.numpy(), (-1,1))
+
+            NLL, NLL_without_v_noise  = evaluate_with_NLL(mean, var, target.tolist(), dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
+            RMSE = evaluate_with_RMSE(mean, target.tolist())
+            #tb_logger.add_scalar('Loss/test_loss', np.average(NLL), cur_it)
+
+            if pu_NLL_list is None:
+                pu_NLL_list = NLL
+                pu_NLL_without_v_noise_list = NLL_without_v_noise
+                pu_RMSE_list = RMSE
+                pu_mean_list = mean
+                pu_variance_list = var
+                pu_gt_list = target.tolist()
+            else:
+                pu_NLL_list = np.append(pu_NLL_list, np.squeeze(NLL))
+                pu_NLL_without_v_noise_list = np.append(pu_NLL_without_v_noise_list, np.squeeze(NLL_without_v_noise))
+                pu_RMSE_list = np.append(pu_RMSE_list, np.squeeze(RMSE))
+                pu_mean_list = np.append(pu_mean_list, np.squeeze(mean))
+                pu_variance_list = np.append(pu_variance_list, np.squeeze(var))
+                pu_gt_list = np.append(pu_gt_list, np.squeeze(target.tolist()))
+
+            #tb_logger.flush()
+            #TODO Compute MCDropout output
+            samples = None
+            for i in range(cfg["num_networks"]):  # By MC dropout, samples the network output several times(=num_networks) given the same input in order to compute the mean and variance for such given input
+                if samples is None:
+                    # samples = model(input).tolist()
+                    out = stat[1] * mc_model(input) + stat[0] # code for de-normalization
+                    samples = out.tolist()
+                else:
+                    # model_output = model(input).tolist()
+                    # samples = np.append(samples, np.asarray(model_output), axis=1)
+                    out = stat[1] * mc_model(input) + stat[0] # code for de-normalization
+                    out = out.tolist()
+                    samples = np.append(samples, np.asarray(out), axis=1)
+
+            mean, var = compute_mean_and_variance(samples, num_networks=cfg["num_networks"])
+
+            NLL, NLL_without_v_noise = evaluate_with_NLL(mean, var, target.tolist(), dataset_name)  # compute the Negative log likelihood with mean, var, target value(label)
+            RMSE = evaluate_with_RMSE(mean, target.tolist())
+
+            #sample = (stat[1]*mc_model(input)+stat[0]).tolist()
+            #sample_M_distance, gt_M_distance =assess_uncertainty_realism(gt_label=target.tolist(),sample=sample, mean=mean, var=var)
+            #sample_M_distance_list.extend(sample_M_distance)
+            #gt_M_distance_list.extend(gt_M_distance)
+
+            #Log to tensorboard
+            #tb_logger.add_scalar('Loss/test_loss', np.average(NLL), cur_it)
+
+            if mc_NLL_list is None:
+                mc_NLL_list = NLL
+                mc_NLL_without_v_noise_list = NLL_without_v_noise
+                mc_RMSE_list = RMSE
+                mc_mean_list = mean
+                mc_variance_list = var
+                mc_gt_list = target.tolist()
+
+            else:
+                mc_NLL_list = np.append(mc_NLL_list, np.squeeze(NLL))
+                mc_NLL_without_v_noise_list = np.append(mc_NLL_without_v_noise_list, np.squeeze(NLL_without_v_noise))
+                mc_RMSE_list = np.append(mc_RMSE_list, np.squeeze(RMSE))
+                mc_mean_list = np.append(mc_mean_list, np.squeeze(mean))
+                mc_variance_list = np.append(mc_variance_list, np.squeeze(var))
+                mc_gt_list = np.append(mc_gt_list, np.squeeze(target.tolist()))
+
+
+    residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc_of_ood(pu_gt_list - pu_mean_list, np.sqrt(pu_variance_list), mc_gt_list - mc_mean_list, np.sqrt(mc_variance_list), output_dir, title, y_axis_contraint=True, y_max=3, cur_epoch=cur_epoch)
+    residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc_of_ood(pu_gt_list - pu_mean_list, np.sqrt(pu_variance_list), mc_gt_list - mc_mean_list, np.sqrt(mc_variance_list), output_dir, title, y_axis_contraint=False, cur_epoch=cur_epoch)
+    #NLL_histogram_for_pu_and_mc_ood_dataset(pu_NLL_list,mc_NLL_list,output_dir, title, cur_epoch
+
+    return
+
+
+
+
+
 
 
 def compute_test_loss(model: nn.Module, test_set_dir, batch_size, num_worker, device):
