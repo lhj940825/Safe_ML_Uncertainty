@@ -385,8 +385,8 @@ def ood_eval(pu_model, mc_model, test_loader, output_dir,cfg, tb_logger=None, ti
                                  [len(mc_NLL_list[mc_NLL_list>cap]), cap], # add the information of current cap-value and number of NLL values beyond such cap
                                  [np.mean(mc_NLL_without_v_noise_list), np.std(mc_NLL_without_v_noise_list)]])
 
-    residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc_of_ood(pu_gt_list - pu_mean_list, np.sqrt(pu_variance_list), mc_gt_list - mc_mean_list, np.sqrt(mc_variance_list), output_dir, title, y_axis_contraint=True, y_max=3, cur_epoch=cur_epoch)
-    residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc_of_ood(pu_gt_list - pu_mean_list, np.sqrt(pu_variance_list), mc_gt_list - mc_mean_list, np.sqrt(mc_variance_list), output_dir, title, y_axis_contraint=False, cur_epoch=cur_epoch)
+    residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc_of_ood(pu_gt_list, pu_mean_list, np.sqrt(pu_variance_list), mc_gt_list, mc_mean_list, np.sqrt(mc_variance_list), output_dir, title, y_axis_contraint=True, y_max=3, cur_epoch=cur_epoch)
+    residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc_of_ood(pu_gt_list, pu_mean_list, np.sqrt(pu_variance_list), mc_gt_list, mc_mean_list, np.sqrt(mc_variance_list), output_dir, title, y_axis_contraint=False, cur_epoch=cur_epoch)
     NLL_histogram_for_pu_and_mc_ood_dataset(pu_NLL_list,mc_NLL_list,output_dir, title, cur_epoch
                                             )
     return pu_err_summary, mc_err_summary
@@ -982,8 +982,8 @@ def ood_eval_with_training_datset(pu_model, mc_model, train_loader, output_dir,c
                 mc_gt_list = np.append(mc_gt_list, np.squeeze(target.tolist()))
 
 
-    residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc_of_ood(pu_gt_list - pu_mean_list, np.sqrt(pu_variance_list), mc_gt_list - mc_mean_list, np.sqrt(mc_variance_list), output_dir, title, y_axis_contraint=True, y_max=3, cur_epoch=cur_epoch)
-    residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc_of_ood(pu_gt_list - pu_mean_list, np.sqrt(pu_variance_list), mc_gt_list - mc_mean_list, np.sqrt(mc_variance_list), output_dir, title, y_axis_contraint=False, cur_epoch=cur_epoch)
+    residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc_of_ood(pu_gt_list, pu_mean_list, np.sqrt(pu_variance_list), mc_gt_list, mc_mean_list, np.sqrt(mc_variance_list), output_dir, title, y_axis_contraint=True, y_max=3, cur_epoch=cur_epoch)
+    residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc_of_ood(pu_gt_list, pu_mean_list, np.sqrt(pu_variance_list), mc_gt_list, mc_mean_list, np.sqrt(mc_variance_list), output_dir, title, y_axis_contraint=False, cur_epoch=cur_epoch)
     #NLL_histogram_for_pu_and_mc_ood_dataset(pu_NLL_list,mc_NLL_list,output_dir, title, cur_epoch
 
     return

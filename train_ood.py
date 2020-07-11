@@ -18,11 +18,12 @@ if __name__ == '__main__':
     # TODO::put all kinds of cfgs and hyperparameter into a config file. e.g. yaml
     cfg = {}
     cfg["ckpt"] = None
-    cfg["num_epochs"] = 150
+    cfg["num_epochs_pu"] = 150
+    cfg["num_epochs_mc"] = 150
     cfg["ckpt_save_interval"] = 10
     cfg["batch_size"] = 100
     cfg["grad_norm_clip"] = None
-    cfg["num_networks"] = 10
+    cfg["num_networks"] = 50
     cfg["pdrop"] = 0.1
     learning_rate = {'PU' : 0.001, 'MC':0.001}
 
@@ -31,14 +32,14 @@ if __name__ == '__main__':
     output_dirs = {}
 
     output_dirs["boston"] = []
-    output_dirs["wine"] =  []
-    output_dirs["power_plant"] =  []
     output_dirs["concrete"] =  []
     output_dirs["energy"] = []
     output_dirs["kin8nm"] = []
     output_dirs["naval"] =  []
+    output_dirs["power_plant"] = []
+    output_dirs["protein"] = []
+    output_dirs["wine"] = []
     output_dirs["yacht"] =  []
-    output_dirs["protein"] =  []
     # output_dirs["year"] =  []
 
     for key, output_dir in output_dirs.items():
@@ -73,6 +74,7 @@ if __name__ == '__main__':
         train_loaders[key] = torch.utils.data.DataLoader(train_datasets[key],
                                                          batch_size=cfg["batch_size"],
                                                          num_workers=0,
+                                                         shuffle=True,
                                                          collate_fn=train_datasets[key].collate_batch)
 
 
@@ -141,7 +143,7 @@ if __name__ == '__main__':
                                    tb_logger=tb_loggers[key])
 
 
-        pu_trainers[key].train(num_epochs=cfg["num_epochs"],
+        pu_trainers[key].train(num_epochs=cfg["num_epochs_pu"],
                                train_loader=train_loaders[key],
                                eval_loader=eval_loaders[key],
                                # eval_loader=None,
@@ -170,7 +172,7 @@ if __name__ == '__main__':
                                    tb_logger=tb_loggers[key])
 
 
-        mc_trainers[key].train(num_epochs=cfg["num_epochs"],
+        mc_trainers[key].train(num_epochs=cfg["num_epochs_mc"],
                                train_loader=train_loaders[key],
                                # eval_loader=eval_loaders[key],
                                # eval_loader=None,

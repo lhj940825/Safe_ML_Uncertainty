@@ -40,7 +40,7 @@ def load_checkpoint(model=None, optimizer=None, filename='checkpoint', logger=No
     return it, epoch
 
 def lr_scheduler():
-    return 0.1
+    return 0.001
 
 class Trainer(object):
     def __init__(self, model, model_fn, model_fn_eval, optimizer, ckpt_dir, grad_norm_clip=1.0, tb_logger=None, output_dir='./tmp', title=''):
