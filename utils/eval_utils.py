@@ -616,8 +616,6 @@ def eval_de(models, test_loader, cfg, output_dir, tb_logger=None, title=""):
     sample_M_distance_list = []
     norm_y = []
 
-
-
     if platform == 'win32':
         dataset_name = output_dir.split("\\")[1]
     else:

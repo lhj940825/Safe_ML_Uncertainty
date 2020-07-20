@@ -331,75 +331,105 @@ def residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc_of_ood(pu
     """
     pu_residual_error = pu_gt - pu_mean
     mc_residual_error = mc_gt - mc_mean
-    fig = plt.figure(figsize=(15, 15))
-    axs = fig.subplots(3, 2)
-
-    axs[0, 0].scatter(pu_residual_error, pu_std)
-    axs[0, 0].set_title(title+': GT-mean of PU')
-    axs[0, 0].set_xlabel('GT-Mean')
-    axs[0, 0].set_ylabel('std')
-    if y_axis_contraint:
-        axs[0, 0].set_ylim([0, y_max])
-
-    x = np.linspace(0, np.max(pu_residual_error), 100)
-    axs[0, 0].plot(x, x,'r-', lw=5, alpha=0.6, label='y=x')
-    axs[0, 0].plot(-x,x,'r-', lw=5, alpha=0.6)
-    axs[0, 0].legend()
-
-    axs[0, 1].scatter(mc_residual_error, mc_std)
-    axs[0, 1].set_title('GT-mean of MC, '+ str(cur_epoch))
-    axs[0, 1].set_xlabel('GT-Mean')
-    axs[0, 1].set_ylabel('std')
-    if y_axis_contraint:
-        axs[0, 1].set_ylim([0, y_max])
-
-    x = np.linspace(0, np.max(mc_residual_error), 100)
-    axs[0, 1].plot(x, x,'r-', lw=5, alpha=0.6, label='y=x')
-    axs[0, 1].plot(-x,x,'r-', lw=5, alpha=0.6)
-    axs[0, 1].legend()
-
-    #Plot residual with respect to GT
-    axs[1, 0].scatter(pu_gt, pu_residual_error)
-    axs[1, 0].set_title(title + ': Residual - GT of PU')
-    axs[1, 0].set_xlabel('GT')
-    axs[1, 0].set_ylabel('Residual')
-    if y_axis_contraint:
-        axs[1, 0].set_ylim([0, y_max])
-
-    axs[1, 1].scatter(mc_gt, mc_residual_error)
-    axs[1, 1].set_title('Residual - GT of MC, ' + str(cur_epoch))
-    axs[1, 1].set_xlabel('GT')
-    axs[1, 1].set_ylabel('Residual')
-    if y_axis_contraint:
-        axs[1, 1].set_ylim([0, y_max])
-
-    #Plot std with respect to GT
-    axs[2, 0].scatter(pu_gt, pu_std)
-    axs[2, 0].set_title(title + ': std - GT of PU')
-    axs[2, 0].set_xlabel('GT')
-    axs[2, 0].set_ylabel('std')
-    if y_axis_contraint:
-        axs[2, 0].set_ylim([0, y_max])
-
-    axs[2, 1].scatter(mc_gt, mc_std)
-    axs[2, 1].set_title('std - GT of MC, ' + str(cur_epoch))
-    axs[2, 1].set_xlabel('GT')
-    axs[2, 1].set_ylabel('std')
-    if y_axis_contraint:
-        axs[2, 1].set_ylim([0, y_max])
-
     os.makedirs(output_dir, exist_ok=True)
     figure_dir = os.path.join(output_dir, 'figures')
     figure_dir = get_train_or_test_figure_dir(figure_dir, title)
     os.makedirs(figure_dir, exist_ok=True)
 
-    if y_axis_contraint:
-        figure_dir = os.path.join(figure_dir, title + ', GT-mean_and_std_of_PU_and_MC_with_ylim_epoch='+str(cur_epoch)+'.png')
-    else:
-        figure_dir = os.path.join(figure_dir, title + ', GT-mean_and_std_of_PU_and_MC_epoch='+str(cur_epoch)+'.png')
+    # Plot residual - std
+    fig_residual_std = plt.figure(figsize=(10, 5))
+    axs = fig_residual_std.subplots(1, 2)
 
-    plt.savefig(figure_dir)
+    axs[0].scatter(pu_residual_error, pu_std)
+    axs[0].set_title('GT-mean of PU')
+    axs[0].set_xlabel('GT-Mean')
+    axs[0].set_ylabel('std')
+    if y_axis_contraint:
+        axs[0].set_ylim([0, y_max])
+
+    x = np.linspace(0, np.max(pu_residual_error), 100)
+    axs[0].plot(x, x,'r-', lw=5, alpha=0.6, label='y=x')
+    axs[0].plot(-x,x,'r-', lw=5, alpha=0.6)
+    axs[0].legend()
+
+    axs[1].scatter(mc_residual_error, mc_std)
+    axs[1].set_title('GT-mean of MC')
+    axs[1].set_xlabel('GT-Mean')
+    axs[1].set_ylabel('std')
+    if y_axis_contraint:
+        axs[1].set_ylim([0, y_max])
+
+    x = np.linspace(0, np.max(mc_residual_error), 100)
+    axs[1].plot(x, x,'r-', lw=5, alpha=0.6, label='y=|x|')
+    axs[1].plot(-x,x,'r-', lw=5, alpha=0.6)
+    axs[1].legend()
+
+    if y_axis_contraint:
+        figure_residual_std_dir = os.path.join(figure_dir, title + ', GT-mean_and_std_of_PU_and_MC_with_ylim_epoch='+str(cur_epoch)+'.png')
+    else:
+        figure_residual_std_dir = os.path.join(figure_dir, title + ', GT-mean_and_std_of_PU_and_MC_epoch='+str(cur_epoch)+'.png')
+
+    plt.savefig(figure_residual_std_dir)
     plt.show()
+    plt.close(fig_residual_std)
+
+    #Plot residual with respect to GT
+    fig_residual_gt = plt.figure(figsize=(10, 5))
+    axs = fig_residual_gt.subplots(1, 2)
+
+    axs[0].scatter(pu_gt, pu_residual_error)
+    axs[0].set_title(title + ': Residual - GT of PU')
+    axs[0].set_xlabel('GT')
+    axs[0].set_ylabel('Residual')
+    if y_axis_contraint:
+        axs[0].set_ylim([0, y_max])
+
+    axs[1].scatter(mc_gt, mc_residual_error)
+    axs[1].set_title('Residual - GT of MC, ' + str(cur_epoch))
+    axs[1].set_xlabel('GT')
+    axs[1].set_ylabel('Residual')
+    if y_axis_contraint:
+        axs[1].set_ylim([0, y_max])
+
+    if y_axis_contraint:
+        figure_residual_gt_dir = os.path.join(figure_dir, title + ', GT_and_residual_of_PU_and_MC_with_ylim_epoch='+str(cur_epoch)+'.png')
+    else:
+        figure_residual_gt_dir = os.path.join(figure_dir, title + ', GT_and_residual_of_PU_and_MC_epoch='+str(cur_epoch)+'.png')
+
+    plt.savefig(figure_residual_gt_dir)
+    plt.show()
+    plt.close(fig_residual_gt)
+
+    #Plot std with respect to GT
+    fig_std_gt = plt.figure(figsize=(10, 5))
+    axs = fig_std_gt.subplots(1, 2)
+
+    axs[0].scatter(pu_gt, pu_std)
+    axs[0].set_title(title + ': std - GT of PU')
+    axs[0].set_xlabel('GT')
+    axs[0].set_ylabel('std')
+    if y_axis_contraint:
+        axs[0].set_ylim([0, y_max])
+
+    axs[1].scatter(mc_gt, mc_std)
+    axs[1].set_title('std - GT of MC, ' + str(cur_epoch))
+    axs[1].set_xlabel('GT')
+    axs[1].set_ylabel('std')
+    if y_axis_contraint:
+        axs[1].set_ylim([0, y_max])
+
+    if y_axis_contraint:
+        figure_std_gt_dir = os.path.join(figure_dir, title + ', GT_and_std_of_PU_and_MC_with_ylim_epoch=' + str(cur_epoch) + '.png')
+    else:
+        figure_std_gt_dir = os.path.join(figure_dir, title + ', GT_and_std_of_PU_and_MC_epoch=' + str(cur_epoch) + '.png')
+
+    plt.savefig(figure_std_gt_dir)
+    plt.show()
+    plt.close(fig_std_gt)
+
+
+
+
 
 
 def residual_error_and_std_plot_with_NLL_heatmap(residual_error, std, output_dir, title, y_max, residual_error_max, denormalized = None):

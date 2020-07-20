@@ -13,15 +13,15 @@ if __name__ == "__main__":
     #TODO: Simplifiy and automate the process
     #Create directory for storing results
     output_dirs = {}
-    #output_dirs["boston"] = os.path.join("./", "output_mc", "boston")
-    #output_dirs["concrete"] = os.path.join("./", "output_mc", "concrete")
-    #output_dirs["energy"] = os.path.join("./", "output_mc", "energy")
+    output_dirs["boston"] = os.path.join("./", "output_mc", "boston")
+    output_dirs["concrete"] = os.path.join("./", "output_mc", "concrete")
+    output_dirs["energy"] = os.path.join("./", "output_mc", "energy")
     output_dirs["kin8nm"] = os.path.join("./", "output_mc", "kin8nm")
-    #output_dirs["naval"] = os.path.join("./", "output_mc", "naval")
+    output_dirs["naval"] = os.path.join("./", "output_mc", "naval")
     output_dirs["power_plant"] = os.path.join("./", "output_mc", "power_plant")
     output_dirs["protein"] = os.path.join("./", "output_mc", "protein")
-    # output_dirs["wine"] = os.path.join("./", "output_mc", "wine")
-    #output_dirs["yacht"] = os.path.join("./", "output_mc", "yacht")
+    output_dirs["wine"] = os.path.join("./", "output_mc", "wine")
+    output_dirs["yacht"] = os.path.join("./", "output_mc", "yacht")
     # output_dirs["year"] = os.path.join("./", "output_mc", "year")
 
     ckpt_dirs = {}
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     cfg["pdrop"] = 0.1
     cfg["grad_norm_clip"] = None
     cfg["num_networks"] = 50
-    cfg["learning_rate"] = 0.001
+    cfg["learning_rate"] = 0.1
 
     data_dirs = {}
     for key, val in output_dirs.items():
