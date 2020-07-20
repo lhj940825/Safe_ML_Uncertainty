@@ -290,7 +290,7 @@ def residual_error_and_std_plot_with_y_equal_abs_x_graph(residual_error, std, ou
     #plt.ylim(0,5)
 
     x = np.linspace(0, np.max(residual_error), 100)
-    plt.plot(x, x,'r-', lw=5, alpha=0.6, label='y=x')
+    plt.plot(x, x,'r-', lw=5, alpha=0.6, label='y=abs(x)')
     plt.plot(-x, x,'r-', lw=5, alpha=0.6)
     plt.legend()
 
@@ -342,7 +342,7 @@ def residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc_of_ood(pu
         axs[0, 0].set_ylim([0, y_max])
 
     x = np.linspace(0, np.max(pu_residual_error), 100)
-    axs[0, 0].plot(x, x,'r-', lw=5, alpha=0.6, label='y=x')
+    axs[0, 0].plot(x, x,'r-', lw=5, alpha=0.6, label='y=abs(x)')
     axs[0, 0].plot(-x,x,'r-', lw=5, alpha=0.6)
     axs[0, 0].legend()
 
@@ -354,7 +354,7 @@ def residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc_of_ood(pu
         axs[0, 1].set_ylim([0, y_max])
 
     x = np.linspace(0, np.max(mc_residual_error), 100)
-    axs[0, 1].plot(x, x,'r-', lw=5, alpha=0.6, label='y=x')
+    axs[0, 1].plot(x, x,'r-', lw=5, alpha=0.6, label='y=abs(x)')
     axs[0, 1].plot(-x,x,'r-', lw=5, alpha=0.6)
     axs[0, 1].legend()
 
@@ -444,7 +444,7 @@ def residual_error_and_std_plot_with_NLL_heatmap(residual_error, std, output_dir
 
     #plot y=x
     x = np.linspace(0, np.max(residual_error), 100)
-    plt.plot(x, x,'r-', lw=5, alpha=0.6, label='y=x')
+    plt.plot(x, x,'r-', lw=5, alpha=0.6, label='y=abs(x)')
     plt.plot(-x, x,'r-', lw=5, alpha=0.6)
     plt.legend()
     plt.ylim(ymin=0, ymax=y_max)
