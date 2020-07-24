@@ -290,7 +290,7 @@ def residual_error_and_std_plot_with_y_equal_abs_x_graph(residual_error, std, ou
     #plt.ylim(0,5)
 
     x = np.linspace(0, np.max(residual_error), 100)
-    plt.plot(x, x,'r-', lw=5, alpha=0.6, label='y=x')
+    plt.plot(x, x,'r-', lw=5, alpha=0.6, label='y=|x|')
     plt.plot(-x, x,'r-', lw=5, alpha=0.6)
     plt.legend()
 
@@ -348,7 +348,7 @@ def residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc_of_ood(pu
         axs[0].set_ylim([0, y_max])
 
     x = np.linspace(0, np.max(pu_residual_error), 100)
-    axs[0].plot(x, x,'r-', lw=5, alpha=0.6, label='y=x')
+    axs[0].plot(x, x,'r-', lw=5, alpha=0.6, label='y=|x|')
     axs[0].plot(-x,x,'r-', lw=5, alpha=0.6)
     axs[0].legend()
 
@@ -472,9 +472,9 @@ def residual_error_and_std_plot_with_NLL_heatmap(residual_error, std, output_dir
     plt.xlabel('Ground Truth - mean')
     plt.ylabel('std')
 
-    #plot y=x
+    #plot y=|x|
     x = np.linspace(0, np.max(residual_error), 100)
-    plt.plot(x, x,'r-', lw=5, alpha=0.6, label='y=x')
+    plt.plot(x, x,'r-', lw=5, alpha=0.6, label='y=|x|')
     plt.plot(-x, x,'r-', lw=5, alpha=0.6)
     plt.legend()
     plt.ylim(ymin=0, ymax=y_max)
@@ -539,7 +539,7 @@ def plot_NLL_histogram(NLL_list, output_dir, title):
 
 def plot_scatter2_and_NLL_histogram_variants(ground_truth, mean, var, output_dir, title):
     """
-    plot many variants of the 'ground truth - mean and std' figures and NLL histogram, e.g with y=x graph, with NLL heatmap, with y-axis contraint
+    plot many variants of the 'ground truth - mean and std' figures and NLL histogram, e.g with y=|x| graph, with NLL heatmap, with y-axis contraint
 
     :param ground_truth:
     :param mean:
