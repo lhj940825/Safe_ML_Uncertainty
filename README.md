@@ -22,7 +22,7 @@ This project mainly contains the following runnable scripts:
 To run specific experiment, simply run the corresponding training script first, then evaluation script.
 Example: train_mc.py -> eval_mc.py for experiment of MC-dropout
 
-Note that it is enough to run a training script only once as long as it remains changed. 
+Note that it is enough to run a training script only once as long as it remains unchanged. 
 The corresponding evaluation script cannot be run if the training script has not been run for at least once.
 
 The experiment results will be saved in the following root output directories:
@@ -35,6 +35,6 @@ The experiment results will be saved in the following root output directories:
 
 Each root output directory contains results of all datasets grouped in individual sub-directories named by the datasets' names.
     
-(Optional) Data prcessing: The datasets have already been processed and saved in 'data', and 'data_ood' for normal datasets and OOD datasets. 
+(Optional) Data processing: The datasets have already been processed and saved in 'data', and 'data_ood' for normal datasets and OOD datasets. 
 If one wants to generate the data himself, simply run "safe_ml_lab_uncertainty/utils/dataset.py". 
 Please do not remove 'data' and 'data_ood' directories as they contain original datasets.
