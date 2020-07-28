@@ -1,2 +1,1 @@
-# Safe_ML
-Lab course "Safe ML"
+Data preprcessing: The datasets have already been processed and saved in 'data', and 'data_ood' for normal datasets and ood datasets. if one wants to generate the data himself, simply run utils.dataset.py. Please do not remove 'data' and 'data_ood' directories as they contain original datasets.

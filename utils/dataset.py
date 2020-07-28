@@ -96,8 +96,10 @@ def dataset_split(dataset, fname, tar_split=-1, split_ratio=0.1, sort_by_target=
         sorted_ids = np.argsort(Y)
         X = X[sorted_ids]
         Y = Y[sorted_ids]
+        X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=split_ratio, shuffle=False)
+    else:
+        X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=split_ratio, random_state=2020, shuffle=True)
 
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=split_ratio, shuffle=False)
     train = np.hstack([X_train, Y_train.reshape(len(X_train), -1)])
     test = np.hstack([X_test, Y_test.reshape(len(X_test), -1)])
 

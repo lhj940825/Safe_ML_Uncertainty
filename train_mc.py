@@ -39,7 +39,7 @@ if __name__ == "__main__":
     cfg["pdrop"] = 0.1
     cfg["grad_norm_clip"] = None
     cfg["num_networks"] = 50
-    cfg["learning_rate"] = 0.001
+    cfg["learning_rate"] = 0.1
 
     data_dirs = {}
     for key, val in output_dirs.items():
