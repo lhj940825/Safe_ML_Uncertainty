@@ -26,14 +26,15 @@ Note that it is enough to run a training script only once as long as it remains 
 The corresponding evaluation script cannot be run if the training script has not been run for at least once.
 
 The experiment results will be saved in the following root output directories:
-safe_ml_lab_uncertainty/
-    1. output_mc - results of MC
-    2. output_de - results of DE
-    3. output_pu - results of PU
-    4. output_ood - results of OOD
+
+    safe_ml_lab_uncertainty/
+        1. output_mc - results of MC
+        2. output_de - results of DE
+        3. output_pu - results of PU
+        4. output_ood - results of OOD
 
 Each root output directory contains results of all datasets grouped in individual sub-directories named by the datasets' names.
     
 (Optional) Data prcessing: The datasets have already been processed and saved in 'data', and 'data_ood' for normal datasets and OOD datasets. 
-If one wants to generate the data himself, simply run utils.dataset.py. 
+If one wants to generate the data himself, simply run "safe_ml_lab_uncertainty/utils/dataset.py". 
 Please do not remove 'data' and 'data_ood' directories as they contain original datasets.
