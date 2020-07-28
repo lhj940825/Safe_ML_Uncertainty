@@ -71,7 +71,7 @@ if __name__ == '__main__':
                                                          num_workers=0,
                                                          collate_fn=test_datasets[key].collate_batch)
 
-     # Prepare model
+    # Prepare model
     print("Prepare model")
     from model.pu_fc import pu_fc, pu_fc2
     from model.fc import FC, FC2
@@ -96,15 +96,10 @@ if __name__ == '__main__':
 
     #Testing
     print("Start testing")
-    # Currently the test dataset is the same as training set. TODO: K-Flod cross validation
-
     # loading trained models
-
     for ckpt_epoch in cfg["eval_epoch"]:
         cur_ckpts = {}
         for key, ckpt_dir in pu_ckpt_dirs.items():
-            # cur_ckpts[key] = '{}.pth'.format(os.path.join(ckpt_dir, "ckpt_e{}".format(trainers[key]._epoch + 1)))
-            # print("loading checkpoint ckpt_e{}".format(trainers[key]._epoch + 1))
             cur_ckpts[key] = '{}.pth'.format(os.path.join(ckpt_dir, "ckpt_e{}".format(ckpt_epoch)))
             print("loading checkpoint ckpt_e{}".format(ckpt_epoch))
             pu_models[key].load_state_dict(torch.load(cur_ckpts[key])["model_state"], strict=False)
@@ -113,30 +108,22 @@ if __name__ == '__main__':
             pu_models[key].eval()
 
         for key, ckpt_dir in mc_ckpt_dirs.items():
-            # cur_ckpts[key] = '{}.pth'.format(os.path.join(ckpt_dir, "ckpt_e{}".format(trainers[key]._epoch + 1)))
-            # print("loading checkpoint ckpt_e{}".format(trainers[key]._epoch + 1))
             cur_ckpts[key] = '{}.pth'.format(os.path.join(ckpt_dir, "ckpt_e{}".format(ckpt_epoch)))
             print("loading checkpoint ckpt_e{}".format(ckpt_epoch))
             mc_models[key].load_state_dict(torch.load(cur_ckpts[key])["model_state"], strict=False)
 
             mc_models[key].train()
 
-
-
         pu_results = {}
         mc_results = {}
         for key in pu_models.keys():
             print("==================================Evaluating {}==========================================".format(key))
-            #pu_models[key]
-            #mc_models[key]
             pu_result, mc_result = ood_eval(pu_models[key], mc_models[key], test_loader=test_loaders[key], cfg=cfg, output_dir=output_dirs[key], tb_logger=tb_loggers[key], title='test-'+key, cur_epoch=ckpt_epoch)
             pu_results[key] = pu_result
             mc_results[key] = mc_result
 
-            #TODO below function is to generate figures for training dataset as requested by Joachim
             ood_eval_with_training_datset(pu_models[key], mc_models[key], train_loader=train_loaders[key], cfg=cfg, output_dir=output_dirs[key], tb_logger=tb_loggers[key], title='train-'+key, cur_epoch=ckpt_epoch )
             print("Finished\n")
-
 
         dataset_list = []
         pu_NLL_list = []
@@ -160,7 +147,6 @@ if __name__ == '__main__':
             mc_NLL_without_v_Noise_list.append(val[3][0])
 
         err_df = pd.DataFrame(index=range(len(dataset_list)), columns=["Datasets", "pu_RMSE", "pu_NLL", "pu_NLL_no_v_noise", 'mc_RMSE', 'mc_NLL', 'mc_NLL_no_v_noise'])
-        # a = pd.DataFrame(dataset_list)
         err_df["Datasets"] = pd.DataFrame(dataset_list)
         err_df["pu_RMSE"] = pd.DataFrame(pu_RMSE_list)
         err_df["pu_NLL"] = pd.DataFrame(pu_NLL_list)
@@ -169,11 +155,9 @@ if __name__ == '__main__':
         err_df["mc_NLL"] = pd.DataFrame(mc_NLL_list)
         err_df["mc_NLL_no_v_noise"] = pd.DataFrame(mc_NLL_without_v_Noise_list)
 
-
         err_sum_dir = "./output_ood/err_summary"
         os.makedirs(err_sum_dir, exist_ok=True)
         err_df.to_csv(os.path.join(err_sum_dir, "ood_err_summary_epoch_"+str(ckpt_epoch)+".csv"), float_format='%.5f')
-
 
     #Finalizing
     print("Analysis finished\n")

@@ -11,8 +11,6 @@ from utils.utils import *
 from utils.eval_utils import *
 
 if __name__ == '__main__':
-    #TODO: Simplifiy and automate the process
-    # TODO::put all kinds of cfgs and hyperparameter into a config file. e.g. yaml
     cfg = {}
     cfg["ckpt"] = None
     cfg["num_epochs"] = 150
@@ -80,7 +78,6 @@ if __name__ == '__main__':
             models[key] = pu_fc(dataset.input_dim)
         models[key].cuda()
 
-
     # Logging
     tb_loggers = {}
     for key, val in output_dirs.items():
@@ -88,13 +85,9 @@ if __name__ == '__main__':
 
     #Testing
     print("Start testing")
-    # Currently the test dataset is the same as training set. TODO: K-Flod cross validation
-
     # loading trained models
     cur_ckpts = {}
     for key, ckpt_dir in ckpt_dirs.items():
-        # cur_ckpts[key] = '{}.pth'.format(os.path.join(ckpt_dir, "ckpt_e{}".format(trainers[key]._epoch + 1)))
-        # print("loading checkpoint ckpt_e{}".format(trainers[key]._epoch + 1))
         cur_ckpts[key] = '{}.pth'.format(os.path.join(ckpt_dir, "ckpt_e{}".format(cfg["eval_epoch"])))
         print("loading checkpoint ckpt_e{}".format(cfg["eval_epoch"]))
         models[key].load_state_dict(torch.load(cur_ckpts[key])["model_state"], strict=False)
@@ -138,7 +131,6 @@ if __name__ == '__main__':
         NLL_without_v_Noise_list.append(val[3][0])
 
     err_df = pd.DataFrame(index=range(len(dataset_list)), columns=["Datasets", "RMSE", "NLL", "NLL_no_v_noise"])
-    # a = pd.DataFrame(dataset_list)
     err_df["Datasets"] = pd.DataFrame(dataset_list)
     err_df["RMSE"] = pd.DataFrame(RMSE_list)
     err_df["NLL"] = pd.DataFrame(NLL_list)

@@ -20,6 +20,7 @@ if __name__ == "__main__":
     cfg["batch_size"] = 100
     cfg["grad_norm_clip"] = None
     cfg["num_networks"] = 10
+    cfg["learning_rate"] = 0.1
 
     #TODO: Simplifiy and automate the process
     #Create directory for storing results
@@ -76,9 +77,6 @@ if __name__ == "__main__":
                                                         num_workers=0,
                                                         collate_fn=eval_datasets[key].collate_batch)
 
-    # dataiter = iter(train_loader_bos)
-    # data, target = dataiter.next()
-
     #Prepare model
     print("Prepare model")
     from model.de_base import DE_base
@@ -97,23 +95,10 @@ if __name__ == "__main__":
     for key, model in models.items():
         optimizers[key] = []
         for base_net in model:
-            optimizers[key].append(optim.Adam(base_net.parameters(), lr=tu.lr_scheduler()))
+            optimizers[key].append(optim.Adam(base_net.parameters(), lr=cfg["learning_rate"]))
 
     #Define starting iteration/epochs.
-    #Will use checkpoints in the future when running on clusters
-    # if cfg["ckpt"] is not None:
-    #     starting_iteration, starting_epoch = load_checkpoint(model=model, optimizer=optimizer, filename=cfg["ckpt"])
-    # elif os.path.isfile(os.path.join(ckpt_dir, "sigterm_ckpt.pth")):
-    #     starting_iteration, starting_epoch = load_checkpoint(model=model, optimizer=optimizer, filename=os.path.join(ckpt_dir, "sigterm_ckpt.pth"))
-    # else:
-    #     starting_iteration, starting_epoch = 0, 0
-
     starting_iteration, starting_epoch = 0, 0
-
-    #Logging
-    # tb_loggers = {}
-    # for key, val in output_dirs.items():
-    #     tb_loggers[key] = create_tb_logger(val)
 
     #Training
     print("Start training")
@@ -142,9 +127,6 @@ if __name__ == "__main__":
                                      ckpt_save_interval=cfg["ckpt_save_interval"],
                                      starting_iteration=starting_iteration,
                                      starting_epoch=starting_epoch)
-
-        # draw_loss_trend_figure(key, len(trainers[key].train_loss), trainers[key].train_loss, trainers[key].eval_loss, output_dirs[key])
-        #     draw_loss_trend_figure("Base_model{}_{}".format(idx, key), len(trainers[key][idx].train_loss), trainers[key][idx].train_loss, output_dir=output_dirs[key][idx])
 
             #Draw a all-in-one figure
             plot_loss(axes[idx // 2, idx % 2], "Base_model{}_{}".format(idx, key),

@@ -131,10 +131,8 @@ if __name__ == "__main__":
                             starting_iteration=starting_iteration,
                             starting_epoch=starting_epoch)
 
-        # draw_loss_trend_figure(key, len(trainers[key].train_loss), trainers[key].train_loss, trainers[key].eval_loss, output_dirs[key])
         draw_loss_trend_figure(key, len(trainers[key].train_loss), trainers[key].train_loss, output_dir=output_dirs[key])
         print("*******************************Finished training {}*******************************\n".format(key))
-
 
     #Finalizing
     print("Training finished\n")

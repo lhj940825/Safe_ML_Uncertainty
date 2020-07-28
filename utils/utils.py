@@ -24,13 +24,7 @@ def split_wine_dataset(wine_data_dir, train_set_dir, test_set_dir):
             wine_dataset = pd.read_csv(wine_data_dir, sep=';')
             wine_dataset = (wine_dataset - wine_dataset.min())/(wine_dataset.max()-wine_dataset.min())
 
-            #std_scaler = StandardScaler() # define standard normalizer
-
-            #wine_dataset = pd.DataFrame(std_scaler.fit_transform(wine_dataset), columns=wine_dataset.columns)
-
             X = wine_dataset.drop(labels= 'quality', axis = 1)
-
-
             X = (X-X.min())/(X.max() - X.min()) # min-max normalization
 
             Y = wine_dataset['quality']
@@ -100,7 +94,6 @@ def plot_loss(ax, title, epoch, train_loss_lost, test_loss_list=None, output_dir
         figure_dir = os.path.join(figure_dir, '{}_loss_fig.png'.format(title))
         plt.savefig(figure_dir)
     # plt.show()
-
 
 def plot_and_save_histograms(NLL_list, RMSE_list, output_dir, title="fig"):
     fig, axs = plt.subplots(1, 2, tight_layout=True)
@@ -201,7 +194,7 @@ def plot_histograms(data, output_dir=None, title="fig"):
 
     # N is the count in each bin, bins is the lower-limit of the bin
     N, bins, patches = ax.hist(data, bins=num_bins, weights=np.ones(len(data)) / len(data))
-    # ax.yaxis.set_major_formatter(PercentFormatter(1))
+
     ax.set_yscale('log')
     ax.set_title(title + ': Target Norm Histogram')
     ax.set_xlabel('Target norm')
@@ -253,9 +246,7 @@ def plot_scatter2(ground_truth, mean, var, output_dir, title):
     :param title:
     :return:
     """
-    #print('gt',len(ground_truth), np.shape(ground_truth))
-    #print('mean',len(mean), np.shape(mean))
-    #print('var',len(var), np.shape(var))
+
     plt.scatter(ground_truth-mean, np.sqrt(var))
     plt.title(title+ ': GT-mean and std ')
     plt.xlabel('Ground Truth - mean')
@@ -287,7 +278,6 @@ def residual_error_and_std_plot_with_y_equal_abs_x_graph(residual_error, std, ou
     plt.title(title+ ': GT-mean and std ')
     plt.xlabel('Ground Truth - mean')
     plt.ylabel('std')
-    #plt.ylim(0,5)
 
     x = np.linspace(0, np.max(residual_error), 100)
     plt.plot(x, x,'r-', lw=5, alpha=0.6, label='y=|x|')
@@ -427,11 +417,6 @@ def residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc_of_ood(pu
     plt.show()
     plt.close(fig_std_gt)
 
-
-
-
-
-
 def residual_error_and_std_plot_with_NLL_heatmap(residual_error, std, output_dir, title, y_max, residual_error_max, denormalized = None):
     """
     plot the 'gt-mean and std' figure (named as scatter2 in other functions) with y=abs(x) graph and NLL heatmap
@@ -460,7 +445,6 @@ def residual_error_and_std_plot_with_NLL_heatmap(residual_error, std, output_dir
 
     NLL_values = np.reshape(np.asarray(NLL_values), (len(y_coordinates), -1))
     NLL_values = DataFrame(NLL_values, columns=x_coordinates, index=y_coordinates)
-    #NLL_values=(NLL_values-NLL_values.mean())/NLL_values.std()
 
     pos = plt.pcolor(x_coordinates, y_coordinates, NLL_values)
     cbar = plt.colorbar(pos)
@@ -559,10 +543,8 @@ def plot_scatter2_and_NLL_histogram_variants(ground_truth, mean, var, output_dir
         residual_error_and_std_plot_with_y_equal_abs_x_graph(gt_sub_mean,std,output_dir,title, y_axis_contraint=True, y_max=y_max, denormalized=flag)
         residual_error_and_std_plot_with_NLL_heatmap(gt_sub_mean,std,output_dir,title, y_max, gt_sub_mean_max, denormalized = flag)
 
-
     NLL = compute_NLL(gt_sub_mean, std)
     plot_NLL_histogram(NLL, output_dir, title)
-    #
 
 
 def compute_NLL(gt_sub_mean, std):
@@ -612,7 +594,6 @@ def plot_Mahalanobis_distance_with_Chi2_PDF(sample_M_distance_list, output_dir, 
     num_bins = 200
 
     plt.hist(sample_M_distance_list, bins=num_bins, color='sandybrown',  alpha=0.5, label='Sample', density=True)
-    #plt.hist(chi, bins=bins,  alpha=0.5, label='Chi PDF', density=True)
 
     plt.legend(loc='upper right')
     plt.xlabel('Squared Mahalanobis_distance')
@@ -664,7 +645,6 @@ def plot_sequence_mean_var(seq_mean, seq_var, xy_lim=None, output_dir='./tmp_vid
 
         ax.set_title('{} Epoch: {}'.format(title, epoch))
         ax.set_xlabel('GT - mean')
-        # ax.axis("off")
 
         ax.scatter(mean, var, s=2, c='blue')
 
@@ -693,9 +673,6 @@ def plot_NLL_cap_cnt(dataset_list, NLL_cap_cnt, cap, output_dir):
 
     plt.show()
 
-    #print(dataset_list, NLL_cap_cnt, cap)
-    #pass
-
 
 def get_train_or_test_figure_dir(output_dir, title):
     if 'train' in title: # when the figures are from training dataset
@@ -710,7 +687,7 @@ def get_train_or_test_figure_dir(output_dir, title):
     os.makedirs(figure_dir, exist_ok=True)
     return figure_dir
 
-def store_train_mean_and_std(dataset_name,mean: np.float64,std):
+def store_train_mean_and_std(dataset_name,mean: np.float64,std, data_type='normal'):
     """
     Store the computed mean and standard deviation on whole training set in yml file.
     These mean and std will be used to compute the NLL as v-noise.
@@ -723,7 +700,7 @@ def store_train_mean_and_std(dataset_name,mean: np.float64,std):
     """
     import yaml
 
-    yml_dir = os.path.join(os.getcwd(), 'configs/mean_std.yml')
+    yml_dir = os.path.join(os.getcwd(), 'configs/mean_std_{}_dataset.yml'.format(data_type))
     stream = open(yml_dir, 'r')
     data = yaml.load(stream,Loader=yaml.BaseLoader)
 
@@ -755,28 +732,3 @@ def save_histograms_and_scatter2_variants_videos(image_folder, title):
     cv2.destroyAllWindows()
     video.release()
 
-"""
-def plot_Mahalanobis_distance(sample_M_distance_list, gt_M_distance_list, output_dir, title="fig"):
-    
-    num_bins = 100
-
-    bins=np.histogram(np.hstack((sample_M_distance_list,gt_M_distance_list)), bins=num_bins)[1] # to get the equal bin width
-
-    plt.hist(gt_M_distance_list, bins,   alpha=0.5, label='Ground Truth', weights=np.ones(len(gt_M_distance_list)) / len(gt_M_distance_list))
-    plt.hist(sample_M_distance_list, bins,  alpha=0.5, label='Sample', weights=np.ones(len(sample_M_distance_list)) / len(sample_M_distance_list))
-
-
-    plt.legend(loc='upper right')
-    plt.xlabel('Squared Mahalanobis_distance')
-    plt.ylabel('frequency')
-    plt.gca().yaxis.set_major_formatter(PercentFormatter(1))
-    plt.title(title + ': Assessment of uncertainty realism')
-
-    os.makedirs(output_dir, exist_ok=True)
-    figure_dir = os.path.join(output_dir, 'figures')
-    os.makedirs(figure_dir, exist_ok=True)
-    figure_dir = os.path.join(figure_dir, title + '_Assesment of Uncertainty Realism.png')
-    plt.savefig(figure_dir)
-
-    plt.show()
-"""

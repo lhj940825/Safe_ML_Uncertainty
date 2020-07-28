@@ -70,7 +70,7 @@ if __name__ == '__main__':
 
     print("Prepare training data")
     for key, fname in data_files.items():
-        train_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[0]))
+        train_datasets[key] = UCIDataset(os.path.join(data_dirs[key], fname[0]), data_type='ood')
         train_loaders[key] = torch.utils.data.DataLoader(train_datasets[key],
                                                          batch_size=cfg["batch_size"],
                                                          num_workers=0,
@@ -151,8 +151,6 @@ if __name__ == '__main__':
                                starting_iteration=starting_iteration,
                                starting_epoch=starting_epoch)
 
-
-        # draw_loss_trend_figure(key, len(trainers[key].train_loss), trainers[key].train_loss, trainers[key].eval_loss, output_dirs[key])
         draw_loss_trend_figure("PU "+ key, len(pu_trainers[key].train_loss), pu_trainers[key].train_loss, output_dir=output_dirs[key])
         print("*******************************Finished training {}*******************************\n".format(key))
 
@@ -180,8 +178,6 @@ if __name__ == '__main__':
                                starting_iteration=starting_iteration,
                                starting_epoch=starting_epoch)
 
-
-        # draw_loss_trend_figure(key, len(trainers[key].train_loss), trainers[key].train_loss, trainers[key].eval_loss, output_dirs[key])
         draw_loss_trend_figure("MC "+ key, len(mc_trainers[key].train_loss), mc_trainers[key].train_loss, output_dir=output_dirs[key])
         print("*******************************Finished training {}*******************************\n".format(key))
 

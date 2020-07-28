@@ -75,9 +75,6 @@ if __name__ == "__main__":
                                                         num_workers=0,
                                                         collate_fn=eval_datasets[key].collate_batch)
 
-    # dataiter = iter(train_loader_bos)
-    # data, target = dataiter.next()
-
     #Prepare model
     print("Prepare model")
     from model.de_base import DE_base
@@ -90,11 +87,6 @@ if __name__ == "__main__":
             init_factor = random.uniform(0.0, 1.0)
             models[key].append(DE_base(dataset.input_dim, init_factor=init_factor))
             models[key][idx].cuda()
-
-    #Logging
-    # tb_loggers = {}
-    # for key, val in output_dirs.items():
-    #     tb_loggers[key] = create_tb_logger(val)
 
     # Testing
     print("Start testing")
@@ -145,7 +137,6 @@ if __name__ == "__main__":
         NLL_without_v_Noise_list.append(val[3][0])
 
     err_df = pd.DataFrame(index=range(len(dataset_list)), columns=["Datasets", "RMSE", "NLL", "NLL_no_v_noise"])
-    # a = pd.DataFrame(dataset_list)
     err_df["Datasets"] = pd.DataFrame(dataset_list)
     err_df["RMSE"] = pd.DataFrame(RMSE_list)
     err_df["NLL"] = pd.DataFrame(NLL_list)

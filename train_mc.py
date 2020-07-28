@@ -31,7 +31,6 @@ if __name__ == "__main__":
         os.makedirs(ckpt_dirs[key], exist_ok=True)
 
     #some cfgs, some cfg will be used in the future
-    #TODO::put all kinds of cfgs and hyperparameter into a config file. e.g. yaml
     cfg = {}
     cfg["ckpt"] = None
     cfg["num_epochs"] = 40
@@ -40,7 +39,7 @@ if __name__ == "__main__":
     cfg["pdrop"] = 0.1
     cfg["grad_norm_clip"] = None
     cfg["num_networks"] = 50
-    cfg["learning_rate"] = 0.1
+    cfg["learning_rate"] = 0.001
 
     data_dirs = {}
     for key, val in output_dirs.items():
@@ -69,9 +68,6 @@ if __name__ == "__main__":
                                                         num_workers=0,
                                                         collate_fn=eval_datasets[key].collate_batch)
 
-    # dataiter = iter(train_loader_bos)
-    # data, target = dataiter.next()
-
     #Prepare model
     print("Prepare model")
     from model.fc import FC, FC2
@@ -91,14 +87,6 @@ if __name__ == "__main__":
         optimizers[key] = optim.Adam(model.parameters(), lr=cfg["learning_rate"])
 
     #Define starting iteration/epochs.
-    #Will use checkpoints in the future when running on clusters
-    # if cfg["ckpt"] is not None:
-    #     starting_iteration, starting_epoch = load_checkpoint(model=model, optimizer=optimizer, filename=cfg["ckpt"])
-    # elif os.path.isfile(os.path.join(ckpt_dir, "sigterm_ckpt.pth")):
-    #     starting_iteration, starting_epoch = load_checkpoint(model=model, optimizer=optimizer, filename=os.path.join(ckpt_dir, "sigterm_ckpt.pth"))
-    # else:
-    #     starting_iteration, starting_epoch = 0, 0
-
     starting_iteration, starting_epoch = 0, 0
 
     #Logging
@@ -130,10 +118,8 @@ if __name__ == "__main__":
                          starting_iteration=starting_iteration,
                          starting_epoch=starting_epoch)
 
-        # draw_loss_trend_figure(key, len(trainers[key].train_loss), trainers[key].train_loss, trainers[key].eval_loss, output_dirs[key])
         draw_loss_trend_figure(key, len(trainers[key].train_loss), trainers[key].train_loss, output_dir=output_dirs[key])
         print("*******************************Finished training {}*******************************\n".format(key))
 
     #Finalizing
     print("Training finished\n")
-    #TODO: integrate logging, visualiztion, GPU data parallel etc in the future

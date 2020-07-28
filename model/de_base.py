@@ -10,9 +10,7 @@ class DE_base(nn.Module):
         self.fc1 = nn.Linear(input_dim, 50)
         self.fc2 = nn.Linear(50, 1)
 
-        # self.loss_fn = nn.NLLLoss()
         self.loss_fn = torch.nn.MSELoss()
-        # self.loss_fn = lambda pred, target: torch.mean(torch.pow((target - pred), 2)) #L2 loss
 
         for m in self.modules():
             if isinstance(m, nn.Linear):
