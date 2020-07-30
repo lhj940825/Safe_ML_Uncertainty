@@ -21,6 +21,8 @@ build/
 ckpt/
 ckpts/
 
+data/
+data_ood/
 
 dist/
 output/
