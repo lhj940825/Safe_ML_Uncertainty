@@ -416,7 +416,12 @@ def pu_eval(model, test_loader, cfg, output_dir, tb_logger=None, title="", data_
     plot_and_save_histograms(NLL_list, RMSE_list, output_dir, title=title)
     plot_scatter(NLL_list, RMSE_list, output_dir, title=title)
     plot_scatter2(gt_list, mean_list, variance_list, output_dir, title)
-    
+
+
+    #residual_error_and_std_plot_with_y_equal_abs_x_graph(gt_list - mean_list, np.sqrt(variance_list), output_dir+'_for_report', title, y_axis_contraint=None)
+
+    #plot_Mahalanobis_distance(sample_M_distance_list,gt_M_distance_list, output_dir=output_dir, title=title)
+    #plot_Mahalanobis_distance_with_Chi2_PDF(sample_M_distance_list,output_dir=output_dir,title=title)
     return err_summary
 
 def eval_with_training_dataset(model, train_loader, cfg, output_dir, tb_logger=None, title="", data_type='normal'):

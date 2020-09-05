@@ -346,6 +346,7 @@ def residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc_of_ood(pu
     axs[1].set_title('GT-mean of MC')
     axs[1].set_xlabel('GT-Mean')
     axs[1].set_ylabel('std')
+
     if y_axis_contraint:
         axs[1].set_ylim([0, y_max])
 
@@ -362,6 +363,7 @@ def residual_error_and_std_plot_with_y_equal_abs_x_graph_for_pu_and_mc_of_ood(pu
     plt.savefig(figure_residual_std_dir)
     plt.show()
     plt.close(fig_residual_std)
+
 
     #Plot residual with respect to GT
     fig_residual_gt = plt.figure(figsize=(10, 5))
@@ -459,6 +461,7 @@ def residual_error_and_std_plot_with_NLL_heatmap(residual_error, std, output_dir
     #plot y=|x|
     x = np.linspace(0, np.max(residual_error), 100)
     plt.plot(x, x,'r-', lw=5, alpha=0.6, label='y=|x|')
+
     plt.plot(-x, x,'r-', lw=5, alpha=0.6)
     plt.legend()
     plt.ylim(ymin=0, ymax=y_max)

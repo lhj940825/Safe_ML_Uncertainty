@@ -42,6 +42,7 @@ if __name__ == "__main__":
 
     # output_dirs["year"] = []
 
+
     for key, output_dir in output_dirs.items():
         output_dirs[key] = os.path.join('./output_pu', key, 'parametric_uncertainty')
 
